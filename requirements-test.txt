@@ -1,0 +1,6 @@
+-r requirements-dev.txt
+homeassistant==2026.10.4
+tinytuya==1.20.0
+tuya-device-sharing-sdk~=0.2.4
+infrared-protocols>=5.6
+

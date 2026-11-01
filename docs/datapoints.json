@@ -1,0 +1,230 @@
+{
+  "model": "Lectron V-BOX Pro NACS Wi-Fi",
+  "hardware": "V1.2",
+  "software": "V2.0.1",
+  "manufacturer_product_id": "xoiejlwg1pq0ehpk",
+  "datapoints": [
+    {
+      "id": 1,
+      "code": "forward_energy_total",
+      "mode": "ro",
+      "property": {
+        "unit": "kWh",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1,
+        "type": "value"
+      }
+    },
+    {
+      "id": 3,
+      "code": "work_state",
+      "mode": "ro",
+      "property": {
+        "range": [
+          "charger_free",
+          "charger_insert",
+          "charger_free_fault",
+          "charger_wait",
+          "charger_charging",
+          "charger_pause",
+          "charger_end",
+          "charger_fault",
+          "charger_suddenStop"
+        ],
+        "type": "enum"
+      }
+    },
+    {
+      "id": 4,
+      "code": "charge_cur_set",
+      "mode": "rw",
+      "property": {
+        "unit": "A",
+        "min": 1,
+        "max": 255,
+        "scale": 0,
+        "step": 1,
+        "type": "value"
+      }
+    },
+    {
+      "id": 5,
+      "code": "sigle_phase_power",
+      "mode": "ro",
+      "property": {
+        "unit": "kW",
+        "min": 0,
+        "max": 99999999,
+        "scale": 3,
+        "step": 1,
+        "type": "value"
+      }
+    },
+    {
+      "id": 6,
+      "code": "phase_a",
+      "mode": "ro",
+      "property": {
+        "type": "raw",
+        "maxlen": 128
+      }
+    },
+    {
+      "id": 9,
+      "code": "power_total",
+      "mode": "ro",
+      "property": {
+        "unit": "kW",
+        "min": 0,
+        "max": 99999999,
+        "scale": 3,
+        "step": 1,
+        "type": "value"
+      }
+    },
+    {
+      "id": 10,
+      "code": "fault",
+      "mode": "ro",
+      "property": {
+        "label": [
+          "ov_cr",
+          "ov2_cr_fault",
+          "ov_vol",
+          "undervoltage_alarm",
+          "contactor_adhesion",
+          "contactor_fault",
+          "earth_fault",
+          "meter_hardware_alarm",
+          "scram_fault",
+          "cp_fault",
+          "meter_commu_fault",
+          "card_reader_fault",
+          "cir_short_fault",
+          "adhesion_fault",
+          "self_test_alarm",
+          "leakagecurr_alarm"
+        ],
+        "type": "bitmap",
+        "maxlen": 16
+      }
+    },
+    {
+      "id": 13,
+      "code": "connection_state",
+      "mode": "ro",
+      "property": {
+        "range": [
+          "controlpi_12v",
+          "controlpi_12v_pwm",
+          "controlpi_9v",
+          "controlpi_9v_pwm",
+          "controlpi_6v",
+          "controlpi_6v_pwm",
+          "controlpi_error"
+        ],
+        "type": "enum"
+      }
+    },
+    {
+      "id": 14,
+      "code": "work_mode",
+      "mode": "rw",
+      "property": {
+        "range": [
+          "charge_now",
+          "charge_energy",
+          "charge_schedule",
+          "charge_manual"
+        ],
+        "type": "enum"
+      }
+    },
+    {
+      "id": 15,
+      "code": "balance_energy",
+      "mode": "ro",
+      "property": {
+        "unit": "kWh",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1,
+        "type": "value"
+      }
+    },
+    {
+      "id": 18,
+      "code": "switch",
+      "mode": "rw",
+      "property": {
+        "type": "bool"
+      }
+    },
+    {
+      "id": 23,
+      "code": "system_version",
+      "mode": "ro",
+      "property": {
+        "type": "string",
+        "maxlen": 255
+      }
+    },
+    {
+      "id": 24,
+      "code": "temp_current",
+      "mode": "ro",
+      "property": {
+        "unit": "℉",
+        "min": -40,
+        "max": 285,
+        "scale": 0,
+        "step": 1,
+        "type": "value"
+      }
+    },
+    {
+      "id": 25,
+      "code": "charge_energy_once",
+      "mode": "ro",
+      "property": {
+        "unit": "kWh",
+        "min": 1,
+        "max": 999999,
+        "scale": 2,
+        "step": 1,
+        "type": "value"
+      }
+    },
+    {
+      "id": 27,
+      "code": "online_state",
+      "mode": "rw",
+      "property": {
+        "range": [
+          "offline",
+          "online"
+        ],
+        "type": "enum"
+      }
+    },
+    {
+      "id": 101,
+      "code": "schedule_remind_plug",
+      "mode": "ro",
+      "property": {
+        "type": "bool"
+      }
+    },
+    {
+      "id": 103,
+      "code": "is_detected_hardwired",
+      "mode": "ro",
+      "property": {
+        "type": "bool"
+      }
+    }
+  ]
+}

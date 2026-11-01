@@ -1,0 +1,154 @@
+title: EV charging
+views:
+- title: Charging
+  path: charging
+  icon: mdi:ev-station
+  cards:
+  - type: markdown
+    content: '# EV charging
+
+      Local Lectron charger readings and start/stop requests. Session energy is the current or last completed session.
+
+      '
+  - type: entities
+    title: Charger
+    show_header_toggle: false
+    entities:
+    - entity: switch.lectron_v_box_pro_charging_request
+      name: Request charging · on/off
+    - entity: sensor.lectron_v_box_pro_status
+      name: Status
+    - entity: binary_sensor.lectron_v_box_pro_vehicle_connected
+      name: Vehicle connected
+    - entity: binary_sensor.lectron_v_box_pro_charging
+      name: Charging reported
+    - entity: sensor.lectron_v_box_pro_session_energy
+      name: Session / last session
+    - entity: sensor.lectron_v_box_pro_total_energy
+      name: Lifetime meter
+    - entity: sensor.lectron_v_box_pro_current_limit
+      name: Configured current limit
+    - entity: sensor.lectron_v_box_pro_internal_temperature
+      name: Internal temperature
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+    - type: tile
+      entity: sensor.lectron_energy_today
+      name: Today
+    - type: tile
+      entity: sensor.lectron_energy_this_month
+      name: This month
+  - type: statistics-graph
+    title: Daily charging energy
+    chart_type: bar
+    period: day
+    days_to_show: 30
+    stat_types:
+    - change
+    entities:
+    - entity: sensor.lectron_v_box_pro_total_energy
+      name: Charging energy
+  - type: history-graph
+    title: Charger activity
+    hours_to_show: 24
+    entities:
+    - entity: sensor.lectron_v_box_pro_status
+      name: Status
+    - entity: binary_sensor.lectron_v_box_pro_vehicle_connected
+      name: Plug connection
+  - type: conditional
+    conditions:
+    - entity: sensor.lectron_v_box_pro_charging_power
+      state_not: unavailable
+    - entity: sensor.lectron_v_box_pro_charging_power
+      state_not: unknown
+    card:
+      type: tile
+      entity: sensor.lectron_v_box_pro_charging_power
+      name: Reported charging power
+  - type: conditional
+    conditions:
+    - entity: binary_sensor.lectron_v_box_pro_problem
+      state: 'on'
+    card:
+      type: entities
+      title: Charger fault
+      entities:
+      - binary_sensor.lectron_v_box_pro_problem
+      - sensor.lectron_fault_details
+  - type: entities
+    title: Flat-rate cost estimate (optional)
+    show_header_toggle: false
+    entities:
+    - entity: input_number.lectron_flat_electricity_rate
+      name: Electricity rate · USD/kWh
+    - entity: sensor.lectron_estimated_session_cost
+      name: Estimated session / last-session cost
+- title: Diagnostics
+  path: diagnostics
+  icon: mdi:information-outline
+  cards:
+  - type: entities
+    title: Charger diagnostics
+    show_header_toggle: false
+    entities:
+    - sensor.lectron_v_box_pro_firmware
+    - sensor.lectron_v_box_pro_charging_mode
+    - sensor.lectron_v_box_pro_connection_state
+    - binary_sensor.lectron_v_box_pro_charge_request
+    - binary_sensor.lectron_v_box_pro_hardwired_detected
+    - binary_sensor.lectron_v_box_pro_problem
+    - sensor.lectron_fault_details
+  - type: markdown
+    content: '**Reading the data**
+
+
+      The on/off switch sends a charging request. Tuya Local can display a requested
+
+      switch value for about five seconds before device feedback.
+
+      Use “Charging reported” and power/energy to check actual charging.
+
+      A request may apply only to the current session; unplug/replug behavior is unverified.
+
+      “Session ended” does not mean the vehicle battery is full.
+
+      Hardwired detection is a device report, not an electrical installation assessment.
+
+
+      Voltage/current are experimental and disabled until verified during an actual charge.
+
+      Power appears when the charger reports it; missing readings are not converted to zero.
+
+      '
+- title: Energy history
+  path: energy-history
+  icon: mdi:chart-bar
+  cards:
+  - type: markdown
+    content: '## Charging energy history
+
+
+      After an optional backfill, historical cloud totals and ongoing local meter changes appear here. Cloud daily boundaries follow report times; imported daily-only increments do not establish actual hourly charging times. Past power, temperature and vehicle battery data are not reconstructed.'
+  - type: statistics-graph
+    title: Monthly charging energy
+    chart_type: bar
+    period: month
+    days_to_show: 210
+    stat_types:
+    - change
+    entities:
+    - entity: sensor.lectron_v_box_pro_total_energy
+      name: Charger energy
+  - type: statistics-graph
+    title: Daily charging energy
+    chart_type: bar
+    period: day
+    days_to_show: 90
+    stat_types:
+    - change
+    entities:
+    - entity: sensor.lectron_v_box_pro_total_energy
+      name: Charger energy

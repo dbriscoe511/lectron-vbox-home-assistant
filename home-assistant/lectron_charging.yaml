@@ -1,0 +1,101 @@
+# Change the source entity if you choose a different device name during setup.
+# Source units must be kWh. Only the two scripts below send commands (DP18).
+utility_meter:
+  lectron_energy_today:
+    name: Lectron energy today
+    source: sensor.lectron_v_box_pro_total_energy
+    cycle: daily
+  lectron_energy_month:
+    name: Lectron energy this month
+    source: sensor.lectron_v_box_pro_total_energy
+    cycle: monthly
+
+input_number:
+  lectron_flat_electricity_rate:
+    name: Lectron flat electricity rate
+    icon: mdi:currency-usd
+    min: 0
+    max: 10
+    step: 0.001
+    mode: box
+    unit_of_measurement: USD/kWh
+
+template:
+  - sensor:
+      - name: Lectron estimated session cost
+        unique_id: lectron_estimated_session_cost_v1
+        device_class: monetary
+        unit_of_measurement: USD
+        icon: mdi:cash
+        availability: >-
+          {{ is_number(states('sensor.lectron_v_box_pro_session_energy'))
+             and states('input_number.lectron_flat_electricity_rate') | float(0) > 0 }}
+        state: >-
+          {{ (states('sensor.lectron_v_box_pro_session_energy') | float(0)
+              * states('input_number.lectron_flat_electricity_rate') | float(0)) | round(2) }}
+      - name: Lectron fault details
+        unique_id: lectron_fault_details_v1
+        icon: mdi:alert-circle-outline
+        availability: >-
+          {{ states('binary_sensor.lectron_v_box_pro_problem') in ['on', 'off']
+             and is_number(state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code')) }}
+        state: >-
+          {% set labels = ['ov_cr', 'ov2_cr_fault', 'ov_vol', 'undervoltage_alarm',
+             'contactor_adhesion', 'contactor_fault', 'earth_fault', 'meter_hardware_alarm',
+             'scram_fault', 'cp_fault', 'meter_commu_fault', 'card_reader_fault',
+             'cir_short_fault', 'adhesion_fault', 'self_test_alarm', 'leakagecurr_alarm'] %}
+          {% set code = state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code') | int(0) %}
+          {% set result = namespace(items=[]) %}
+          {% for label in labels %}
+            {% if code | bitwise_and(2 ** loop.index0) %}
+              {% set result.items = result.items + [label] %}
+            {% endif %}
+          {% endfor %}
+          {% if code > 65535 %}
+            {% set result.items = result.items + ['unknown_fault_bits'] %}
+          {% endif %}
+          {{ (result.items | join(', '))[:250] if result.items else 'No fault reported' }}
+        attributes:
+          fault_code: >-
+            {{ state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code') }}
+          complete_details: >-
+            {% set labels = ['ov_cr', 'ov2_cr_fault', 'ov_vol', 'undervoltage_alarm',
+               'contactor_adhesion', 'contactor_fault', 'earth_fault', 'meter_hardware_alarm',
+               'scram_fault', 'cp_fault', 'meter_commu_fault', 'card_reader_fault',
+               'cir_short_fault', 'adhesion_fault', 'self_test_alarm', 'leakagecurr_alarm'] %}
+            {% set code = state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code') | int(0) %}
+            {% set result = namespace(items=[]) %}
+            {% for label in labels %}
+              {% if code | bitwise_and(2 ** loop.index0) %}
+                {% set result.items = result.items + [label] %}
+              {% endif %}
+            {% endfor %}
+            {% if code > 65535 %}
+              {% set result.items = result.items + ['unknown_fault_bits'] %}
+            {% endif %}
+            {{ result.items }}
+
+
+script:
+  lectron_start_charging:
+    alias: Lectron start charging
+    description: Send one start request when the vehicle is connected and no fault is reported.
+    mode: single
+    sequence:
+      - condition: state
+        entity_id: binary_sensor.lectron_v_box_pro_vehicle_connected
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.lectron_v_box_pro_problem
+        state: 'off'
+      - action: switch.turn_on
+        target:
+          entity_id: switch.lectron_v_box_pro_charging_request
+  lectron_stop_charging:
+    alias: Lectron stop charging
+    description: Send one stop request without requiring known plug or fault states.
+    mode: single
+    sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.lectron_v_box_pro_charging_request
