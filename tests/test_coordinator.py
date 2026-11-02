@@ -1,6 +1,8 @@
 """Run the real HA script engine with isolated services and a controlled clock."""
 import asyncio
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +14,7 @@ from homeassistant.helpers.script import Script, _ScriptRun, async_validate_acti
 PACKAGE = yaml.safe_load((Path(__file__).resolve().parents[1] / 'home-assistant/lectron_charging.yaml').read_text())
 
 
-async def exercise(tmp_path, invalid=None, stop_during_grace=False):
+async def exercise(tmp_path, invalid=None, stop_during_grace=False, before=None, after=None, policy='on', manual=False, override=False, blocked_at_start=False, settle=None):
     hass = HomeAssistant(str(tmp_path))
     states = {
         'binary_sensor.lectron_v_box_pro_vehicle_connected': 'on',
@@ -21,12 +23,16 @@ async def exercise(tmp_path, invalid=None, stop_during_grace=False):
         'sensor.lectron_v_box_pro_charging_power': 'unavailable',
         'switch.lectron_v_box_pro_charging_request': 'off',
         'script.lectron_vehicle_start_charging': 'off',
+        'script.lectron_charge_now': 'off',
+        'binary_sensor.lectron_charging_allowed': policy,
+        'input_boolean.lectron_manual_charge_override': 'on' if override else 'off',
     }
     for entity, value in states.items():
         hass.states.async_set(entity, value)
     entered, release = asyncio.Event(), asyncio.Event()
     calls, delays = [], []
     start = None
+    clock = {'now': datetime.fromisoformat(before or '2026-11-01T12:00:00').replace(tzinfo=ZoneInfo('America/Denver'))}
 
     async def service(call):
         data = dict(call.data)
@@ -41,13 +47,15 @@ async def exercise(tmp_path, invalid=None, stop_during_grace=False):
             hass.states.async_set('binary_sensor.lectron_v_box_pro_charging', 'on')
             hass.states.async_set('sensor.lectron_v_box_pro_charging_power', '9.0')
 
-    for domain, names in {'switch': ['turn_on', 'turn_off'], 'script': ['turn_on', 'turn_off'], 'persistent_notification': ['create', 'dismiss']}.items():
+    for domain, names in {'input_boolean':['turn_on','turn_off'], 'switch': ['turn_on', 'turn_off'], 'script': ['turn_on', 'turn_off'], 'persistent_notification': ['create', 'dismiss']}.items():
         for name in names:
             hass.services.async_register(domain, name, service)
 
     async def delay(run):
         seconds = run._get_pos_time_period_template('delay').total_seconds()
         delays.append(seconds)
+        if seconds == 5 and settle:
+            clock['now']=datetime.fromisoformat(settle).replace(tzinfo=ZoneInfo('America/Denver'))
         if seconds == 300:
             entered.set()
             release_task = asyncio.create_task(release.wait())
@@ -63,12 +71,17 @@ async def exercise(tmp_path, invalid=None, stop_during_grace=False):
         sequence = await async_validate_actions_config(hass, cv.SCRIPT_SCHEMA(config['sequence']))
         return Script(hass, sequence, name, 'script', script_mode=config['mode'])
 
-    with patch.object(_ScriptRun, '_async_step_delay', delay):
+    with patch.object(_ScriptRun, '_async_step_delay', delay), patch('homeassistant.util.dt.now', side_effect=lambda *a, **k: clock['now']):
         start = await make('lectron_start_charging')
-        task = asyncio.create_task(start.async_run(context=Context()))
+        task = asyncio.create_task(start.async_run({'manual_request':manual},context=Context()))
+        if blocked_at_start:
+            await asyncio.wait_for(task,timeout=2)
+            return calls,delays
         await asyncio.wait_for(entered.wait(), timeout=2)
         assert delays == [300]
         assert [(d, s) for d, s, _ in calls] == [('switch', 'turn_on')]
+        if after:
+            clock['now']=datetime.fromisoformat(after).replace(tzinfo=ZoneInfo('America/Denver'))
         if invalid:
             entity, value = invalid
             hass.states.async_set(entity, value)

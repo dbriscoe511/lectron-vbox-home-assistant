@@ -27,3 +27,8 @@ The public schema contains only selected manufacturer datapoint definitions.
 Private keys, app files, account cache, device IDs/MACs, real energy histories,
 network addresses and HA configuration are not part of this repository.
 
+
+The weekday policy/manual override was validated in live HA while unplugged.
+Tests execute the real HA script engine for boundary crossings, stale policy,
+manual takeover, hook cancellation and recovery. No physical peak-window test
+was performed; HA/LAN downtime and raw charger autostart remain limitations.

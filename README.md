@@ -20,6 +20,7 @@ not establish compatibility with every product revision.
 - Charging mode, firmware, pilot state, charge request and hardwired detection.
 - Home Assistant Energy-compatible cumulative energy statistics.
 - Daily/monthly live energy meters and a native dashboard with no custom cards.
+- Weekday17:00–21:00 automatic block (America/Denver), with a manual session override.
 - Optional power readings when the charger actually reports them.
 
 This release writes only **charging request DP18** and the manufacturer-supported
@@ -39,7 +40,8 @@ missing data is not converted to zero or carried indefinitely from another sessi
 DP25 can retain the last completed session or checkpoint during a new charge;
 it is not a continuously updated session counter. `Session ended` does not mean
 `Battery full`. Vehicle battery percentage/range/ETA come from a separate vehicle
-integration. See [OCPP and reusable framework findings](docs/ocpp.md).
+integration. See [OCPP and reusable framework findings](docs/ocpp.md) and
+[charging schedule/manual override behavior](docs/scheduling.md).
 
 ## Tested setup
 
@@ -133,7 +135,8 @@ homeassistant:
 ```
 
 Check configuration and restart, or reload supported integrations if already
-loaded. The package adds guarded start/stop scripts with optional vehicle coordination,
+loaded. The package adds the documented weekday schedule and manual Charge now override,
+guarded start/stop scripts with optional vehicle coordination,
 live daily/monthly meters, all-active-bit fault details
 and an optional flat electricity rate. Leave the rate at zero to keep the cost
 estimate unavailable. Costs exclude time-of-use pricing, taxes and fees.
@@ -154,6 +157,11 @@ See [history/backfill instructions](docs/history.md). Backfill must preserve
 source granularity, units, timezone, gaps and a nonoverlapping cutoff. Imported
 statistics are not a fabricated raw power trace. This project does not require
 SQL edits or a permanently running cloud-history integration.
+
+The dashboard's **Start charging now** bypasses the time block for one manual
+session. Automations and Ski workflows use `script.lectron_start_charging`
+without a manual flag and check `binary_sensor.lectron_charging_allowed`.
+See [policy and recovery details](docs/scheduling.md).
 
 ## Updates and removal
 

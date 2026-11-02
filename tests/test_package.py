@@ -2,10 +2,21 @@
 import asyncio
 from pathlib import Path
 import yaml
+from homeassistant.config import _recursive_merge
+from homeassistant.components.script.config import SCRIPT_ENTITY_SCHEMA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import Template
 
 PACKAGE = yaml.safe_load((Path(__file__).resolve().parents[1] / 'home-assistant/lectron_charging.yaml').read_text())
+
+
+def test_script_metadata_survives_actual_ha_package_merge():
+    root=Path(__file__).resolve().parents[1]
+    for config in (PACKAGE,yaml.safe_load((root/'home-assistant/vehicle-hooks.example.yaml').read_text())):
+        merged={}
+        assert _recursive_merge(merged,config['script']) is None
+        for script in merged.values():
+            SCRIPT_ENTITY_SCHEMA(script)
 
 
 def test_fault_details_unknown_and_all_bits(tmp_path):

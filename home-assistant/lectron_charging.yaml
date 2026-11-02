@@ -1,4 +1,4 @@
-# Only supported current DP4 and charging-request DP18 are writable.
+# America/Denver; automatic weekday block:17:00 inclusive to21:00 exclusive.
 utility_meter:
   lectron_energy_today:
     name: Lectron energy today
@@ -18,173 +18,497 @@ input_number:
     mode: box
     unit_of_measurement: USD/kWh
 template:
-- sensor:
-  - name: Lectron estimated session cost
-    unique_id: lectron_estimated_session_cost_v1
-    device_class: monetary
-    unit_of_measurement: USD
-    icon: mdi:cash
-    availability: |-
-      {{ is_number(states('sensor.lectron_v_box_pro_session_energy'))
-         and states('input_number.lectron_flat_electricity_rate') | float(0) > 0 }}
-    state: |-
-      {{ (states('sensor.lectron_v_box_pro_session_energy') | float(0)
-          * states('input_number.lectron_flat_electricity_rate') | float(0)) | round(2) }}
-  - name: Lectron fault details
-    unique_id: lectron_fault_details_v1
-    icon: mdi:alert-circle-outline
-    availability: |-
-      {{ states('binary_sensor.lectron_v_box_pro_problem') in ['on', 'off']
-         and is_number(state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code')) }}
-    state: |-
-      {% set labels = ['ov_cr', 'ov2_cr_fault', 'ov_vol', 'undervoltage_alarm',
-         'contactor_adhesion', 'contactor_fault', 'earth_fault', 'meter_hardware_alarm',
-         'scram_fault', 'cp_fault', 'meter_commu_fault', 'card_reader_fault',
-         'cir_short_fault', 'adhesion_fault', 'self_test_alarm', 'leakagecurr_alarm'] %}
-      {% set code = state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code') | int(0) %} {% set result = namespace(items=[]) %} {% for label in labels %}
-        {% if code | bitwise_and(2 ** loop.index0) %}
-          {% set result.items = result.items + [label] %}
-        {% endif %}
-      {% endfor %} {% if code > 65535 %}
-        {% set result.items = result.items + ['unknown_fault_bits'] %}
-      {% endif %} {{ (result.items | join(', '))[:250] if result.items else 'No fault reported' }}
-    attributes:
-      fault_code: '{{ state_attr(''binary_sensor.lectron_v_box_pro_problem'', ''fault_code'') }}'
-      complete_details: |-
-        {% set labels = ['ov_cr', 'ov2_cr_fault', 'ov_vol', 'undervoltage_alarm',
-           'contactor_adhesion', 'contactor_fault', 'earth_fault', 'meter_hardware_alarm',
-           'scram_fault', 'cp_fault', 'meter_commu_fault', 'card_reader_fault',
-           'cir_short_fault', 'adhesion_fault', 'self_test_alarm', 'leakagecurr_alarm'] %}
-        {% set code = state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code') | int(0) %} {% set result = namespace(items=[]) %} {% for label in labels %}
-          {% if code | bitwise_and(2 ** loop.index0) %}
-            {% set result.items = result.items + [label] %}
-          {% endif %}
-        {% endfor %} {% if code > 65535 %}
-          {% set result.items = result.items + ['unknown_fault_bits'] %}
-        {% endif %} {{ result.items }}
+  - sensor:
+      - name: Lectron estimated session cost
+        unique_id: lectron_estimated_session_cost_v1
+        device_class: monetary
+        unit_of_measurement: USD
+        icon: mdi:cash
+        availability: |-
+          {{ is_number(states('sensor.lectron_v_box_pro_session_energy'))
+             and states('input_number.lectron_flat_electricity_rate') | float(0) > 0 }}
+        state: |-
+          {{ (states('sensor.lectron_v_box_pro_session_energy') | float(0)
+              * states('input_number.lectron_flat_electricity_rate') | float(0)) | round(2) }}
+      - name: Lectron fault details
+        unique_id: lectron_fault_details_v1
+        icon: mdi:alert-circle-outline
+        availability: |-
+          {{ states('binary_sensor.lectron_v_box_pro_problem') in ['on', 'off']
+             and is_number(state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code')) }}
+        state: |-
+          {% set labels = ['ov_cr', 'ov2_cr_fault', 'ov_vol', 'undervoltage_alarm',
+             'contactor_adhesion', 'contactor_fault', 'earth_fault', 'meter_hardware_alarm',
+             'scram_fault', 'cp_fault', 'meter_commu_fault', 'card_reader_fault',
+             'cir_short_fault', 'adhesion_fault', 'self_test_alarm', 'leakagecurr_alarm'] %}
+          {% set code = state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code') | int(0) %} {% set result = namespace(items=[]) %} {% for label in labels %}
+            {% if code | bitwise_and(2 ** loop.index0) %}
+              {% set result.items = result.items + [label] %}
+            {% endif %}
+          {% endfor %} {% if code > 65535 %}
+            {% set result.items = result.items + ['unknown_fault_bits'] %}
+          {% endif %} {{ (result.items | join(', '))[:250] if result.items else 'No fault reported' }}
+        attributes:
+          fault_code: '{{ state_attr(''binary_sensor.lectron_v_box_pro_problem'', ''fault_code'') }}'
+          complete_details: |-
+            {% set labels = ['ov_cr', 'ov2_cr_fault', 'ov_vol', 'undervoltage_alarm',
+               'contactor_adhesion', 'contactor_fault', 'earth_fault', 'meter_hardware_alarm',
+               'scram_fault', 'cp_fault', 'meter_commu_fault', 'card_reader_fault',
+               'cir_short_fault', 'adhesion_fault', 'self_test_alarm', 'leakagecurr_alarm'] %}
+            {% set code = state_attr('binary_sensor.lectron_v_box_pro_problem', 'fault_code') | int(0) %} {% set result = namespace(items=[]) %} {% for label in labels %}
+              {% if code | bitwise_and(2 ** loop.index0) %}
+                {% set result.items = result.items + [label] %}
+              {% endif %}
+            {% endfor %} {% if code > 65535 %}
+              {% set result.items = result.items + ['unknown_fault_bits'] %}
+            {% endif %} {{ result.items }}
+  - binary_sensor:
+      - name: Lectron charging allowed
+        unique_id: lectron_charging_allowed_v1
+        icon: mdi:clock-check-outline
+        state: '{{ (now().tzinfo | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <=
+          now().hour < 21)) }}'
+        attributes:
+          policy: Automatic charging blocked Monday-Friday 17:00-21:00
+          timezone: '{{ now().tzinfo | string }}'
+          expected_timezone: America/Denver
+      - name: Lectron manual override active
+        unique_id: lectron_manual_override_active_v1
+        icon: mdi:hand-back-right
+        state: '{{ is_state(''input_boolean.lectron_manual_charge_override'', ''on'') }}'
 script:
   lectron_start_charging:
     alias: Lectron start charging
-    description: One charger request, five-minute observation window, then one optional vehicle wake request.
+    description: Automatic start respects weekday peak block; explicit manual request can override for
+      one session. Five-minute grace before vehicle fallback.
     mode: single
     sequence:
-    - &id002
-      condition: state
-      entity_id: binary_sensor.lectron_v_box_pro_vehicle_connected
-      state: 'on'
-    - &id003
-      condition: state
-      entity_id: binary_sensor.lectron_v_box_pro_problem
-      state: 'off'
-    - if:
-      - condition: template
-        value_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'', ''on'') and states(''sensor.lectron_v_box_pro_charging_power'')
-          | float(0) > 0.1 }}'
-      then:
-      - &id001
-        action: persistent_notification.dismiss
-        data:
-          notification_id: lectron_charging_request
-      - stop: Charging is already reported with positive power.
-    - condition: template
-      value_template: '{{ states(''switch.lectron_v_box_pro_charging_request'') in [''on'', ''off''] }}'
-    - action: switch.turn_on
-      target:
-        entity_id: switch.lectron_v_box_pro_charging_request
-    - delay:
-        seconds: 300
-    - if:
-      - condition: template
-        value_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'', ''on'') and states(''sensor.lectron_v_box_pro_charging_power'')
-          | float(0) > 0.1 }}'
-      then:
-      - *id001
-      - stop: Charging reported with positive power.
-    - if:
+      - variables:
+          manual_request: '{{ manual_request | default(false) | bool }}'
+      - if:
+          - condition: template
+            value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and
+              (now().tzinfo | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour
+              < 21))) or ((manual_request | default(false) | bool) and is_state(''input_boolean.lectron_manual_charge_override'',
+              ''on''))) }}'
+        then:
+          - action: script.turn_on
+            target:
+              entity_id: script.lectron_enforce_charging_block
+          - stop: Charging is blocked by policy unless explicitly requested manually.
       - condition: state
-        entity_id: binary_sensor.lectron_v_box_pro_charging
+        entity_id: binary_sensor.lectron_v_box_pro_vehicle_connected
         state: 'on'
-      - condition: template
-        value_template: '{{ not is_number(states(''sensor.lectron_v_box_pro_charging_power'')) }}'
-      then:
-      - action: persistent_notification.create
-        data:
-          notification_id: lectron_charging_request
-          title: Lectron power sample pending
-          message: The charger reports charging, but a power sample is unavailable. No vehicle wake request
-            was sent.
-      - stop: Charging status reported; power unconfirmed.
-    - if:
-      - *id002
-      - *id003
-      - condition: template
-        value_template: '{{ states(''script.lectron_vehicle_start_charging'') in [''on'', ''off''] }}'
+      - condition: state
+        entity_id: binary_sensor.lectron_v_box_pro_problem
+        state: 'off'
+      - if:
+          - condition: template
+            value_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'', ''on'') and states(''sensor.lectron_v_box_pro_charging_power'')
+              | float(0) > 0.1 }}'
+        then:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: lectron_charging_request
+          - stop: Charging is already reported with positive power.
       - condition: template
         value_template: '{{ states(''switch.lectron_v_box_pro_charging_request'') in [''on'', ''off'']
-          and states(''binary_sensor.lectron_v_box_pro_charging'') in [''on'', ''off''] }}'
-      then:
-      - action: script.turn_on
+          }}'
+      - condition: template
+        value_template: '{{ (is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and (now().tzinfo
+          | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour < 21))) or
+          ((manual_request | default(false) | bool) and is_state(''input_boolean.lectron_manual_charge_override'',
+          ''on'')) }}'
+      - action: switch.turn_on
         target:
-          entity_id: script.lectron_vehicle_start_charging
-      - wait_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'', ''on'') and states(''sensor.lectron_v_box_pro_charging_power'')
-          | float(0) > 0.1 }}'
-        timeout: 00:01:00
-        continue_on_timeout: true
+          entity_id: switch.lectron_v_box_pro_charging_request
       - delay:
-          seconds: 5
-    - choose:
-      - conditions:
-        - condition: template
-          value_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'', ''on'') and states(''sensor.lectron_v_box_pro_charging_power'')
-            | float(0) > 0.1 }}'
-        sequence:
-        - *id001
-      default:
-      - action: persistent_notification.create
-        data:
-          notification_id: lectron_charging_request
-          title: Lectron charging request
-          message: Start was requested, but charging with positive reported power was not confirmed. Check
-            the vehicle, its schedule/limit, and the charger.
+          seconds: 300
+      - if:
+          - condition: template
+            value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and
+              (now().tzinfo | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour
+              < 21))) or ((manual_request | default(false) | bool) and is_state(''input_boolean.lectron_manual_charge_override'',
+              ''on''))) }}'
+        then:
+          - action: script.turn_on
+            target:
+              entity_id: script.lectron_enforce_charging_block
+          - stop: Charging permission expired during the observation window.
+      - if:
+          - condition: template
+            value_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'', ''on'') and states(''sensor.lectron_v_box_pro_charging_power'')
+              | float(0) > 0.1 }}'
+        then:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: lectron_charging_request
+          - stop: Charging reported with positive power.
+      - if:
+          - condition: state
+            entity_id: binary_sensor.lectron_v_box_pro_charging
+            state: 'on'
+          - condition: template
+            value_template: '{{ not is_number(states(''sensor.lectron_v_box_pro_charging_power'')) }}'
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: lectron_charging_request
+              title: Lectron power sample pending
+              message: The charger reports charging, but a power sample is unavailable. No vehicle wake
+                request was sent.
+          - stop: Charging status reported; power unconfirmed.
+      - if:
+          - condition: state
+            entity_id: binary_sensor.lectron_v_box_pro_vehicle_connected
+            state: 'on'
+          - condition: state
+            entity_id: binary_sensor.lectron_v_box_pro_problem
+            state: 'off'
+          - condition: template
+            value_template: '{{ states(''script.lectron_vehicle_start_charging'') in [''on'', ''off'']
+              }}'
+          - condition: template
+            value_template: '{{ states(''switch.lectron_v_box_pro_charging_request'') in [''on'', ''off'']
+              and states(''binary_sensor.lectron_v_box_pro_charging'') in [''on'', ''off''] }}'
+          - condition: template
+            value_template: '{{ (is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and (now().tzinfo
+              | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour < 21)))
+              or ((manual_request | default(false) | bool) and is_state(''input_boolean.lectron_manual_charge_override'',
+              ''on'')) }}'
+        then:
+          - action: script.turn_on
+            target:
+              entity_id: script.lectron_vehicle_start_charging
+            data:
+              variables:
+                manual_request: '{{ manual_request }}'
+          - wait_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'', ''on'') and states(''sensor.lectron_v_box_pro_charging_power'')
+              | float(0) > 0.1 }}'
+            timeout: 00:01:00
+            continue_on_timeout: true
+          - delay:
+              seconds: 5
+      - if:
+          - condition: template
+            value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and
+              (now().tzinfo | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour
+              < 21))) or ((manual_request | default(false) | bool) and is_state(''input_boolean.lectron_manual_charge_override'',
+              ''on''))) }}'
+        then:
+          - action: script.turn_on
+            target:
+              entity_id: script.lectron_enforce_charging_block
+          - stop: Charging permission expired during the observation window.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'', ''on'') and
+                  states(''sensor.lectron_v_box_pro_charging_power'') | float(0) > 0.1 }}'
+            sequence:
+              - action: persistent_notification.dismiss
+                data:
+                  notification_id: lectron_charging_request
+        default:
+          - action: persistent_notification.create
+            data:
+              notification_id: lectron_charging_request
+              title: Lectron charging request
+              message: Start was requested, but charging with positive reported power was not confirmed.
+                Check the vehicle, its schedule/limit, and the charger.
+          - if:
+              - condition: template
+                value_template: '{{ manual_request }}'
+            then:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.lectron_manual_charge_override
+    fields:
+      manual_request:
+        description: Use the manual Charge now script; normal/Ski calls omit this flag.
+        default: false
+        selector:
+          boolean: null
   lectron_stop_charging:
     alias: Lectron stop charging
     description: Cancel pending start and stop the charger; optionally request vehicle stop.
     mode: restart
     sequence:
-    - action: script.turn_off
-      target:
-        entity_id: script.lectron_start_charging
-    - if:
-      - condition: template
-        value_template: '{{ states(''script.lectron_vehicle_start_charging'') in [''on'', ''off''] }}'
-      then:
       - action: script.turn_off
         target:
-          entity_id: script.lectron_vehicle_start_charging
-    - action: switch.turn_off
-      target:
-        entity_id: switch.lectron_v_box_pro_charging_request
-    - if:
+          entity_id: script.lectron_charge_now
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.lectron_manual_charge_override
+      - action: script.turn_off
+        target:
+          entity_id: script.lectron_start_charging
+      - if:
+          - condition: template
+            value_template: '{{ states(''script.lectron_vehicle_start_charging'') in [''on'', ''off'']
+              }}'
+        then:
+          - action: script.turn_off
+            target:
+              entity_id: script.lectron_vehicle_start_charging
+      - action: switch.turn_off
+        target:
+          entity_id: switch.lectron_v_box_pro_charging_request
+      - if:
+          - condition: template
+            value_template: '{{ states(''script.lectron_vehicle_stop_charging'') in [''on'', ''off'']
+              }}'
+        then:
+          - action: script.turn_on
+            target:
+              entity_id: script.lectron_vehicle_stop_charging
+      - wait_template: '{{ states(''binary_sensor.lectron_v_box_pro_charging'') == ''off'' }}'
+        timeout: 00:00:15
+        continue_on_timeout: true
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.lectron_v_box_pro_charging
+                state: 'off'
+            sequence:
+              - action: persistent_notification.dismiss
+                data:
+                  notification_id: lectron_charging_request
+        default:
+          - action: persistent_notification.create
+            data:
+              notification_id: lectron_charging_request
+              title: Lectron stop unconfirmed
+              message: Stop was requested, but the charger has not reported a noncharging state. Check
+                the charger and vehicle.
+  lectron_charge_now:
+    alias: Lectron charge now
+    description: Explicit manual session override; keeps the vehicle target and current unchanged.
+    mode: restart
+    sequence:
+      - condition: state
+        entity_id: binary_sensor.lectron_v_box_pro_vehicle_connected
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.lectron_v_box_pro_problem
+        state: 'off'
       - condition: template
-        value_template: '{{ states(''script.lectron_vehicle_stop_charging'') in [''on'', ''off''] }}'
-      then:
+        value_template: '{{ states(''switch.lectron_v_box_pro_charging_request'') in [''on'',''off'']
+          }}'
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.lectron_manual_charge_override
+      - action: script.turn_off
+        target:
+          entity_id: script.lectron_enforce_charging_block
+      - action: script.turn_off
+        target:
+          entity_id: script.lectron_start_charging
+      - if:
+          - condition: template
+            value_template: '{{ states(''script.lectron_vehicle_start_charging'') in [''on'',''off'']
+              }}'
+        then:
+          - action: script.turn_off
+            target:
+              entity_id: script.lectron_vehicle_start_charging
       - action: script.turn_on
         target:
-          entity_id: script.lectron_vehicle_stop_charging
-    - wait_template: '{{ states(''binary_sensor.lectron_v_box_pro_charging'') == ''off'' }}'
-      timeout: 00:00:15
-      continue_on_timeout: true
-    - choose:
-      - conditions:
-        - condition: state
-          entity_id: binary_sensor.lectron_v_box_pro_charging
-          state: 'off'
-        sequence:
-        - *id001
-      default:
-      - action: persistent_notification.create
+          entity_id: script.lectron_start_charging
         data:
-          notification_id: lectron_charging_request
-          title: Lectron stop unconfirmed
-          message: Stop was requested, but the charger has not reported a noncharging state. Check the
-            charger and vehicle.
+          variables:
+            manual_request: true
+  lectron_enforce_charging_block:
+    alias: Lectron enforce charging block
+    description: Local-only enforcement; never sends a vehicle wake or repeated cloud stop.
+    mode: single
+    max_exceeded: silent
+    sequence:
+      - condition: template
+        value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and (now().tzinfo
+          | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour < 21)))) and
+          not is_state(''input_boolean.lectron_manual_charge_override'', ''on'') }}'
+      - condition: template
+        value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and (now().tzinfo
+          | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour < 21)))) and
+          not is_state(''input_boolean.lectron_manual_charge_override'', ''on'') }}'
+      - action: script.turn_off
+        target:
+          entity_id: script.lectron_start_charging
+      - if:
+          - condition: template
+            value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and
+              (now().tzinfo | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour
+              < 21)))) and not is_state(''input_boolean.lectron_manual_charge_override'', ''on'') }}'
+          - condition: template
+            value_template: '{{ states(''script.lectron_vehicle_start_charging'') in [''on'',''off'']
+              }}'
+        then:
+          - action: script.turn_off
+            target:
+              entity_id: script.lectron_vehicle_start_charging
+      - if:
+          - condition: template
+            value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and
+              (now().tzinfo | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour
+              < 21)))) and not is_state(''input_boolean.lectron_manual_charge_override'', ''on'') }}'
+          - condition: template
+            value_template: '{{ is_state(''switch.lectron_v_box_pro_charging_request'',''on'') or is_state(''binary_sensor.lectron_v_box_pro_charging'',''on'')
+              }}'
+        then:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.lectron_v_box_pro_charging_request
+            continue_on_error: true
+          - wait_template: '{{ is_state(''binary_sensor.lectron_v_box_pro_charging'',''off'') }}'
+            timeout: 00:00:15
+            continue_on_timeout: true
+      - if:
+          - condition: template
+            value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and
+              (now().tzinfo | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour
+              < 21)))) and not is_state(''input_boolean.lectron_manual_charge_override'', ''on'') }}'
+          - condition: template
+            value_template: '{{ states(''switch.lectron_v_box_pro_charging_request'') not in [''on'',''off'']
+              or states(''binary_sensor.lectron_v_box_pro_charging'') != ''off'' }}'
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: lectron_peak_enforcement
+              title: Lectron schedule enforcement unconfirmed
+              message: Automatic charging is blocked, but a local stop or charger state could not be confirmed.
+                Check the charger connection.
+      - if:
+          - condition: template
+            value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and
+              (now().tzinfo | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour
+              < 21)))) and not is_state(''input_boolean.lectron_manual_charge_override'', ''on'') }}'
+          - condition: state
+            entity_id: binary_sensor.lectron_v_box_pro_charging
+            state: 'off'
+          - condition: state
+            entity_id: switch.lectron_v_box_pro_charging_request
+            state: 'off'
+        then:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: lectron_peak_enforcement
+input_boolean:
+  lectron_manual_charge_override:
+    name: Lectron manual charge override
+    icon: mdi:hand-back-right
+    initial: false
+automation:
+  - id: lectron_peak_charge_enforcement
+    alias: Lectron — enforce weekday charging block
+    mode: single
+    max_exceeded: silent
+    triggers:
+      - trigger: time
+        at: '17:00:00'
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: binary_sensor.lectron_charging_allowed
+        to:
+          - 'off'
+          - unknown
+          - unavailable
+      - trigger: state
+        entity_id: input_boolean.lectron_manual_charge_override
+        to: 'off'
+      - trigger: state
+        entity_id:
+          - binary_sensor.lectron_v_box_pro_vehicle_connected
+          - binary_sensor.lectron_v_box_pro_charging
+          - switch.lectron_v_box_pro_charging_request
+        to: 'on'
+      - trigger: time_pattern
+        minutes: /1
+    conditions:
+      - condition: template
+        value_template: '{{ not ((is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and (now().tzinfo
+          | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour < 21)))) and
+          not is_state(''input_boolean.lectron_manual_charge_override'', ''on'') }}'
+    actions:
+      - action: script.turn_on
+        target:
+          entity_id: script.lectron_enforce_charging_block
+  - id: lectron_scheduled_charging_resume
+    alias: Lectron — charge outside weekday peak hours
+    mode: single
+    max_exceeded: silent
+    triggers:
+      - trigger: time
+        at: '21:00:00'
+        id: boundary
+      - trigger: homeassistant
+        event: start
+        id: startup
+      - trigger: state
+        entity_id: binary_sensor.lectron_charging_allowed
+        to: 'on'
+        id: allowed
+      - trigger: state
+        entity_id: binary_sensor.lectron_v_box_pro_vehicle_connected
+        to: 'on'
+        id: plug
+      - trigger: template
+        id: recovery
+        value_template: '{{ states(''switch.lectron_v_box_pro_charging_request'') in [''on'',''off'']
+          and states(''binary_sensor.lectron_v_box_pro_charging'') in [''on'',''off''] and states(''binary_sensor.lectron_v_box_pro_problem'')
+          in [''on'',''off''] and states(''binary_sensor.lectron_v_box_pro_vehicle_connected'') in [''on'',''off'']
+          }}'
+    conditions:
+      - condition: template
+        value_template: '{{ (is_state(''binary_sensor.lectron_charging_allowed'', ''on'') and (now().tzinfo
+          | string == ''America/Denver'' and not (now().weekday() < 5 and 17 <= now().hour < 21))) }}'
+      - condition: template
+        value_template: '{{ trigger.id != ''boundary'' or now().weekday() < 5 }}'
+      - condition: state
+        entity_id: binary_sensor.lectron_v_box_pro_vehicle_connected
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.lectron_v_box_pro_problem
+        state: 'off'
+      - condition: state
+        entity_id: script.lectron_start_charging
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.lectron_v_box_pro_charging
+        state: 'off'
+      - condition: template
+        value_template: '{{ states(''switch.lectron_v_box_pro_charging_request'') in [''on'',''off'']
+          }}'
+    actions:
+      - action: script.turn_on
+        target:
+          entity_id: script.lectron_start_charging
+  - id: lectron_clear_manual_charge_override
+    alias: Lectron — clear manual session override
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.lectron_v_box_pro_vehicle_connected
+        to: 'off'
+        id: unplug
+      - trigger: template
+        value_template: '{{ is_state(''sensor.lectron_v_box_pro_status'',''session_ended'') and is_state(''script.lectron_start_charging'',''off'')
+          and is_state(''script.lectron_charge_now'',''off'') }}'
+        for: 00:00:30
+        id: ended
+      - trigger: homeassistant
+        event: start
+        id: startup
+    conditions:
+      - condition: state
+        entity_id: input_boolean.lectron_manual_charge_override
+        state: 'on'
+      - condition: template
+        value_template: '{{ trigger.id in [''unplug'',''startup''] or (is_state(''sensor.lectron_v_box_pro_status'',''session_ended'')
+          and is_state(''script.lectron_start_charging'',''off'') and is_state(''script.lectron_charge_now'',''off''))
+          }}'
+    actions:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.lectron_manual_charge_override

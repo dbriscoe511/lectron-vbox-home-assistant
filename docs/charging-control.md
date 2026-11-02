@@ -21,7 +21,9 @@ actions:
 ```
 
 Changing current can pause charging. Use the package scripts/dashboard buttons
-for coordinated requests:
+for coordinated requests. The dashboard's **Start charging now** uses
+`script.lectron_charge_now`, an explicit session override of the weekday block.
+The following automatic entry point respects that block:
 
 ```yaml
 actions:
@@ -47,28 +49,28 @@ unavailable, a notification describes that uncertainty without waking the car.
 After five minutes, if plug/fault guards remain satisfied, an optional vehicle
 hook can run **once**. It waits up to another minute and checks after a short
 settling interval. Unconfirmed requests create a local HA notification. There is
-no retry loop or startup resume. Stop cancels the pending start script first,
+no vehicle retry loop. The schedule reconciles allowed charging on startup and
+permission opening; it does not restore an old delayed request. Stop cancels the pending start script first,
 also cancels a running vehicle-start hook, then sends DP18off without requiring plug/fault states; it can also call a
 vehicle-stop hook. No delayed DP18on is sent after the vehicle hook. A cloud
 command already dispatched cannot be recalled; the charger stop remains separate.
 
 ## Optional vehicle hooks
 
-Keep these in a **separate private HA package**, adapted to your integration:
+Copy [vehicle-hooks.example.yaml](../home-assistant/vehicle-hooks.example.yaml)
+to a **separate private HA package** and adapt the vehicle binding. Its start
+guards are mandatory for the schedule, including the explicit manual-request
+field. Include the copied guarded file alongside the charger package:
 
 ```yaml
-script:
-  lectron_vehicle_start_charging:
-    sequence:
-      - action: kia_uvo.start_charge
-        data:
-          device_id: YOUR_VEHICLE_DEVICE_ID
-  lectron_vehicle_stop_charging:
-    sequence:
-      - action: kia_uvo.stop_charge
-        data:
-          device_id: YOUR_VEHICLE_DEVICE_ID
+homeassistant:
+  packages:
+    lectron_vehicle: !include lectron_vehicle.yaml
 ```
+
+Replace `YOUR_VEHICLE_DEVICE_ID` inside the copied file and adapt its vehicle
+service actions. Keep its permission, connection and fault guards intact.
+
 
 Hooks must send only vehicle commands; do not turn the charger on or add retry
 loops. The package works without hooks but cannot wake a car that independently
@@ -88,3 +90,7 @@ DP18 and measured current/power. This tests whether the car resumes on its own;
 the earlier short test does not prove a vehicle wake is always necessary.
 Existing background integrations are separate from manual test calls. Preserve
 other schedules and protection settings.
+
+See [the weekday policy](scheduling.md) for manual-session clearing, exact boundaries,
+restart behavior and the stable automatic-permission helper. In package YAML,
+boolean selectors use `boolean: null` so the HA package merger preserves the type.

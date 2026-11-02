@@ -7,17 +7,17 @@ views:
       - type: markdown
         content: |-
           # EV charging
-          Local readings and charging controls. Changing current can pause the vehicle; use Start charging to resume. Session energy may retain an earlier checkpoint while charging. 48 A requires suitable hardwiring.
+          Automatic charging pauses weekdays5–9PM (America/Denver). Start charging now overrides the schedule for this session; Stop or unplug clears the override. The car's target percentage is unchanged. Changing current can pause the vehicle;48A requires suitable hardwiring.
       - type: horizontal-stack
         cards:
           - type: button
-            name: Start charging
+            name: Start charging now
             icon: mdi:ev-station
             tap_action:
               action: perform-action
               perform_action: script.turn_on
               target:
-                entity_id: script.lectron_start_charging
+                entity_id: script.lectron_charge_now
           - type: button
             name: Stop charging
             icon: mdi:stop
@@ -30,8 +30,12 @@ views:
         title: Charger
         show_header_toggle: false
         entities:
-          - entity: switch.lectron_v_box_pro_charging_request
-            name: Request charging · on/off
+          - entity: binary_sensor.lectron_charging_allowed
+            name: Automatic charging allowed
+          - entity: binary_sensor.lectron_manual_override_active
+            name: Manual session override
+          - entity: binary_sensor.lectron_v_box_pro_charge_request
+            name: Charger request
           - entity: select.lectron_v_box_pro_charging_current
             name: Charging current
           - entity: sensor.lectron_v_box_pro_status
