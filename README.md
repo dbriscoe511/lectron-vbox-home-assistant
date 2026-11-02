@@ -14,26 +14,32 @@ not establish compatibility with every product revision.
 
 - Local charging start/stop requests usable in HA automations.
 - Local charger status, plug/charging indicators and fault reporting.
-- Cumulative energy, current/last-session energy, internal temperature and the
-  configured current limit.
+- Cumulative energy, reported session/checkpoint energy, internal temperature,
+  live voltage/current/power and the configured current limit.
+- Current selector:16/32/40/48A (48A requires suitable hardwiring).
 - Charging mode, firmware, pilot state, charge request and hardwired detection.
 - Home Assistant Energy-compatible cumulative energy statistics.
 - Daily/monthly live energy meters and a native dashboard with no custom cards.
 - Optional power readings when the charger actually reports them.
 
-This release exposes **one charging-request switch (DP18)** for start/stop and
-HA automations. All other entities are read-only. It preserves the charger's
-current/schedule/protection settings. The generic cloud schema permits
-up to 255 A for its current field; that is not a safe device or installation limit.
-Current changes, energy resets and protection changes are not exposed.
-See [charging control and automation](docs/charging-control.md) for request
-feedback, guarded scripts and physical-verification limits.
+This release writes only **charging request DP18** and the manufacturer-supported
+**current settings DP4**. The generic schema's255A maximum is not a hardware or
+installation limit. Charging mode, protection, schedule and energy reset DPs
+remain unwritable. See [charging controls](docs/charging-control.md) for bounded
+start/stop scripts, optional vehicle hooks and the five-minute observation window.
 
-Voltage/current decoding uses the conventional Tuya `phase_a` layout and is
-disabled by default until verified on this model during a real charge. Missing
-power/voltage/current readings are not converted to zero or carried indefinitely
-from an earlier charging session. `Session ended` does not mean `Battery full`.
-Vehicle battery percentage/range/ETA come from a separate vehicle integration.
+This firmware sends a **12-byte phase packet**:2-byte voltage,3-byte current,
+3-byte power, then4 unidentified bytes. Voltage/current were compared with the
+Lectron app during an actual charge. Power uses the same packet and is consistent
+with voltage/current; an independent power-meter comparison remains outstanding.
+The trailing bytes are not exposed as energy or time without a verified meaning.
+Voltage/current/power require a present packet and reported charging state;
+missing data is not converted to zero or carried indefinitely from another session.
+
+DP25 can retain the last completed session or checkpoint during a new charge;
+it is not a continuously updated session counter. `Session ended` does not mean
+`Battery full`. Vehicle battery percentage/range/ETA come from a separate vehicle
+integration. See [OCPP and reusable framework findings](docs/ocpp.md).
 
 ## Tested setup
 
@@ -127,7 +133,8 @@ homeassistant:
 ```
 
 Check configuration and restart, or reload supported integrations if already
-loaded. The package adds guarded start/stop scripts, live daily/monthly meters, all-active-bit fault details
+loaded. The package adds guarded start/stop scripts with optional vehicle coordination,
+live daily/monthly meters, all-active-bit fault details
 and an optional flat electricity rate. Leave the rate at zero to keep the cost
 estimate unavailable. Costs exclude time-of-use pricing, taxes and fees.
 
@@ -149,6 +156,12 @@ statistics are not a fabricated raw power trace. This project does not require
 SQL edits or a permanently running cloud-history integration.
 
 ## Updates and removal
+
+If upgrading from the initial profile, enable Voltage and Current in their HA
+entity settings if they remain disabled. Existing entity names/identities are
+preserved; the power sensor now uses the tested DP6 packet instead of absent DP9.
+The new current selector may require adapting its entity ID if HA includes an
+area name. Configure optional vehicle hooks separately as documented.
 
 Tuya Local updates can overwrite or remove this custom profile. After each
 transport update, reapply it, validate and reload/restart. Until upstream accepts

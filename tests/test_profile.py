@@ -11,6 +11,7 @@ import yaml
 from custom_components.tuya_local.helpers.device_config import TuyaDeviceConfig
 from custom_components.tuya_local.sensor import TuyaLocalSensor
 from custom_components.tuya_local.switch import TuyaLocalSwitch
+from custom_components.tuya_local.select import TuyaLocalSelect
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = ROOT / "devices" / "lectron_vbox_pro.yaml"
@@ -91,34 +92,38 @@ def test_unrecognized_status_is_unknown_and_not_a_valid_enum_option(config, stat
     assert value(config, state, "Status") == "session_ended"
 
 
-@pytest.mark.parametrize("name,dp", [("Charging power", "9"), ("Single phase power", "5")])
+@pytest.mark.parametrize("name,dp", [("Charging power", "6"), ("Single phase power", "5"), ("Voltage", "6"), ("Current", "6")])
 def test_missing_power_is_unavailable_and_does_not_persist(config, state, name, dp):
     assert value(config, state, name) is None
     assert value(config, state, name, "available") is False
     ent = entity(config, name)
     assert ent.find_dps("sensor").persist is False
     assert ent.find_dps("available").persist is False
-    state[dp] = 7680
-    assert value(config, state, name) == 7.68
+    state['3'] = 'charger_charging'
+    packet = (2400).to_bytes(2, "big") + (32000).to_bytes(3, "big") + (7680).to_bytes(3, "big") + bytes(4)
+    state[dp] = base64.b64encode(packet).decode() if dp == '6' else 7680
+    assert value(config, state, name) == {'Voltage': 240, 'Current': 32}.get(name, 7.68)
     assert value(config, state, name, "available") is True
 
 
-def test_optional_phase_decoder_is_explicitly_unverified_and_disabled(config, state):
-    packet = (2400).to_bytes(2, "big") + (32000).to_bytes(3, "big") + (7680).to_bytes(3, "big")
+def test_twelve_byte_phase_decoder_ignores_unidentified_tail(config, state):
+    packet = (2400).to_bytes(2, "big") + (32000).to_bytes(3, "big") + (7680).to_bytes(3, "big") + (0xDEADBEEF).to_bytes(4, "big")
     state["6"] = base64.b64encode(packet).decode()
     assert value(config, state, "Voltage") == 240
     assert value(config, state, "Current") == 32
-    raw = yaml.safe_load(PROFILE.read_text())
-    for name in ("Voltage", "Current"):
-        assert next(e for e in raw["entities"] if e.get("name") == name)["hidden"] is True
+    assert value(config, state, 'Charging power') == 7.68
+    state['6'] = base64.b64encode(packet[:8] + bytes(4)).decode()
+    assert value(config, state, 'Voltage') == 240
+    assert value(config, state, 'Current') == 32
+    assert value(config, state, 'Charging power') == 7.68
 
 
 def test_profile_only_writes_charging_request_and_excludes_sensitive_controls(config):
     raw = yaml.safe_load(PROFILE.read_text())
     writable = [item for item in raw['entities'] if item['entity'] not in {'sensor', 'binary_sensor'}]
-    assert len(writable) == 1
-    assert writable[0]['entity'] == 'switch'
-    assert writable[0]['dps'] == [{'id': 18, 'type': 'boolean', 'name': 'switch'}]
+    assert len(writable) == 2
+    assert {x['entity'] for x in writable} == {'switch', 'select'}
+    assert {dp['id'] for x in writable for dp in x['dps']} == {4, 18}
     assert all(dp["id"] not in {11, 12, 16, 17, 19, 22, 33, 105} for ent in raw["entities"] for dp in ent["dps"])
     ids = [ent.config_id for ent in config.all_entities()]
     assert len(ids) == len(set(ids))
@@ -135,3 +140,22 @@ def test_switch_sends_only_boolean_dp18(config, state):
     asyncio.run(switch.async_turn_off())
     mock.async_set_properties.assert_awaited_once_with({'18': False})
 
+
+
+def test_current_selector_only_offers_manufacturer_settings(config, state):
+    mock = device(state)
+    mock.async_set_properties = AsyncMock()
+    select = TuyaLocalSelect(mock, entity(config, 'Charging current'))
+    assert select.options == ['16 A', '32 A', '40 A', '48 A']
+    assert select.current_option == '32 A'
+    asyncio.run(select.async_select_option('40 A'))
+    mock.async_set_properties.assert_awaited_once_with({'4': 40})
+
+
+@pytest.mark.parametrize('status', ['charger_free','charger_pause','charger_end','charger_fault','future',None])
+def test_noncharging_status_hides_stale_phase_packet(config, state, status):
+    packet=(2400).to_bytes(2,'big')+(32000).to_bytes(3,'big')+(7680).to_bytes(3,'big')+bytes(4)
+    state['6']=base64.b64encode(packet).decode()
+    state['3']=status
+    for name in ('Voltage','Current','Charging power'):
+        assert value(config,state,name,'available') is False

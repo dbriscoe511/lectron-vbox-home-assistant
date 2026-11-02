@@ -1,34 +1,90 @@
-# Charging requests and automations
+# Charging controls and vehicle coordination
 
-`switch.lectron_v_box_pro_charging_request` sends **only DP18** (`true`/`false`).
-Use normal `switch.turn_on` / `switch.turn_off` actions in HA automations.
-The package also provides `script.lectron_start_charging` (requires a known
-vehicle connection and no reported fault) and `script.lectron_stop_charging`
-(does not require a known plug/fault state).
+`switch.lectron_v_box_pro_charging_request` writes **only DP18**. Standard HA
+`switch.turn_on`/`switch.turn_off` actions address the charger directly.
+Tuya Local can overlay pending writes for about five seconds; DP18 feedback is
+not proof of energy flow. Check DP3 Charging and reported power/current.
+
+`select.lectron_v_box_pro_charging_current` writes **only DP4**, offering the
+manufacturer's settings **16 A, 32 A, 40 A, 48 A**. The48A setting requires a
+suitable hardwired installation; the NEMA-plug default is40A. Choose within your
+installation's limit. The schema's255A maximum is not a supported product limit.
+The existing Current limit sensor remains read-only.
 
 ```yaml
 actions:
-  - action: script.lectron_start_charging
+  - action: select.select_option
+    target:
+      entity_id: select.lectron_v_box_pro_charging_current
+    data:
+      option: "32 A"
+```
+
+Changing current can pause charging. Use the package scripts/dashboard buttons
+for coordinated requests:
+
+```yaml
+actions:
+  - action: script.turn_on
+    target:
+      entity_id: script.lectron_start_charging
 ```
 
 ```yaml
 actions:
-  - action: script.lectron_stop_charging
+  - action: script.turn_on
+    target:
+      entity_id: script.lectron_stop_charging
 ```
 
-Choose the schedule/trigger in HA's automation editor. No charging schedule,
-startup resume, or automatic retries are installed by this repository. Existing
-charger/vehicle schedules and limits still apply; avoid competing schedules.
+Start requires a known vehicle connection, no fault and an available switch.
+An already charging device with positive power exits without another request.
+Otherwise it sends DP18 once and allows a **five-minute charger-only observation
+window** before any optional vehicle wake request. Positive reported power and
+DP3 charging confirm reported operation. If charging is reported but power is
+unavailable, a notification describes that uncertainty without waking the car.
 
-Tuya Local can temporarily overlay pending writes for about five seconds. The
-request switch and diagnostic DP18 binary sensor can therefore show a requested
-value before the charger echoes it. Use **DP3 Charging**, power and increasing
-energy to assess actual charging. An accepted service call is not proof of a
-physical start or stop. A car may decline a start because it is full, sleeping,
-scheduled, or otherwise not ready.
+After five minutes, if plug/fault guards remain satisfied, an optional vehicle
+hook can run **once**. It waits up to another minute and checks after a short
+settling interval. Unconfirmed requests create a local HA notification. There is
+no retry loop or startup resume. Stop cancels the pending start script first,
+also cancels a running vehicle-start hook, then sends DP18off without requiring plug/fault states; it can also call a
+vehicle-stop hook. No delayed DP18on is sent after the vehicle hook. A cloud
+command already dispatched cannot be recalled; the charger stop remains separate.
 
-The manufacturer marks DP18 writable, and the LAN protocol supports it. Whether
-it controls only the current session or also blocks charging after unplug/replug
-must be checked with a connected vehicle. The initial installation was verified
-while unplugged; a physical charging-cycle test is still needed. Current-limit,
-charging-mode, protection, energy-reset and schedule DPs are not writable here.
+## Optional vehicle hooks
+
+Keep these in a **separate private HA package**, adapted to your integration:
+
+```yaml
+script:
+  lectron_vehicle_start_charging:
+    sequence:
+      - action: kia_uvo.start_charge
+        data:
+          device_id: YOUR_VEHICLE_DEVICE_ID
+  lectron_vehicle_stop_charging:
+    sequence:
+      - action: kia_uvo.stop_charge
+        data:
+          device_id: YOUR_VEHICLE_DEVICE_ID
+```
+
+Hooks must send only vehicle commands; do not turn the charger on or add retry
+loops. The package works without hooks but cannot wake a car that independently
+refuses charging. Vehicle schedules, battery targets and limits still apply.
+
+## Physical evidence and next test
+
+The installed test confirmed an actual stop and accepted a32A setting. The
+vehicle briefly reported charging, then paused. Restoring40A and sending a
+Hyundai start request resumed reported charging with positive measured current
+and power. Sustained32A draw was not verified;48A was not tested. Persistence
+across unplug/replug remains unverified.
+
+Next time, observe the local charger for **five full minutes** after its start
+request before any manual vehicle query, refresh or command. Record DP3/pilot,
+DP18 and measured current/power. This tests whether the car resumes on its own;
+the earlier short test does not prove a vehicle wake is always necessary.
+Existing background integrations are separate from manual test calls. Preserve
+other schedules and protection settings.

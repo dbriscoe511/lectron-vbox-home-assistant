@@ -9,17 +9,17 @@ Tuya 3.5, HA 2026.10.4 and Tuya Local 2026.10.0 on 2026-11-01.
 | DP25 session energy | Own schema kWh/scale2; authenticated LAN and HA reading | Retains last session while idle; not an Energy source |
 | DP24 temperature | Own schema explicitly Fahrenheit; LAN/HA reading | Internal charger temperature, not ambient or battery temperature |
 | DP3 status | Full enum from own schema; idle state observed | Other physical charge/fault transitions remain to be observed |
-| DP4 current limit | Own schema A/scale0; existing setting read back | Read-only; schema max255 is not a hardware/install limit |
+| DP4 current limit/control | Manufacturer settings16/32/40/48A;32A setting accepted and40A restored | Sustained32A draw and48A operation not tested;48A requires suitable hardwiring |
 | DP10 fault | Own schema bitmap; no-fault observed; synthetic multi-bit tests | No fault deliberately induced |
 | DP13 plug/pilot | Own enum; unplugged idle observed | Bad/unknown pilot produces Unknown, not Connected |
-| DP18 request/control | Own writable boolean schema; idle readback and local request switch loaded | Pending feedback can be optimistic for5s; physical start/stop still needs a connected-vehicle test |
+| DP18 request/control | Actual DP3/pilot stop observed; restart with positive power after vehicle start request | Pending DP18 can be optimistic for5s; five-minute self-resume test remains outstanding |
 | DP103 hardwired | Own boolean schema; device report observed | Does not verify wiring or permit changing installation current |
-| DP5/9 power | Own schema kW/scale3 | Absent in idle reply; charging measurement not yet verified |
-| DP6 voltage/current | Raw phase_a schema; related Tuya layout and synthetic decoder tests | Exact byte layout unverified during real charging; disabled by default |
+| DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | Independent power-meter/app power comparison outstanding;DP5/9 were absent |
+| DP6 voltage/current |12-byte packet prefix compared with app during real charging; synthetic tail-isolation tests | Limited to tested firmware/packet length; final4bytes unidentified |
 | DP27 online state | Raw reported enum captured | Not used for availability; can say offline during a successful LAN read |
 
-Only the charging-request switch is writable; other entities are telemetry.
-No current/protection setting was changed. Continuous cloud-blocked operation,
+Only the charging-request switch and supported current selector are writable.
+Current was briefly set to32A, then restored to40A; no protection setting changed. Continuous cloud-blocked operation,
 Wi-Fi outages, power failures and real charging transitions still need field
 testing. Configured availability is based on actual local connection health.
 
