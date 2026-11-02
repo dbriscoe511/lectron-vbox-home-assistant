@@ -7,7 +7,7 @@ views:
       - type: markdown
         content: |-
           # EV charging
-          Automatic charging pauses weekdays5–9PM (America/Denver). Start charging now overrides the schedule for this session; Stop or unplug clears the override. The car's target percentage is unchanged. Changing current can pause the vehicle;48A requires suitable hardwiring.
+          Automatic charging pauses weekdays 5–9 PM (America/Denver). Start charging now overrides the schedule for this session; Stop or unplug clears the override. The car's target percentage is unchanged. Changing current can pause the vehicle; 48 A requires suitable hardwiring.
       - type: horizontal-stack
         cards:
           - type: button
