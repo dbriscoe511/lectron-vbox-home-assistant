@@ -76,6 +76,27 @@ Hooks must send only vehicle commands; do not turn the charger on or add retry
 loops. The package works without hooks but cannot wake a car that independently
 refuses charging. Vehicle schedules, battery targets and limits still apply.
 
+## Battery target percentage
+
+The local Lectron interface provides charging requests, current selection and
+charger telemetry. It does not provide vehicle state of charge or a battery
+percentage cutoff. The car enforces its own AC charge target, including when
+HA starts charging or overrides the weekday schedule.
+
+The optional [vehicle target card](../home-assistant/vehicle-card.example.yaml)
+puts your vehicle integration's AC target number, reported battery percentage
+and vehicle report time on the charging dashboard. Replace all three example
+entity IDs before adding it. The number control uses the vehicle integration's
+supported range and step; it does not write a Lectron datapoint. Cloud commands
+and cached reports can lag, so a successful service call alone does not confirm
+the target reached the car. This card does not change the DC target or request
+periodic vehicle wake-ups.
+
+Disable conflicting native charging schedules while preserving the desired
+AC target. For example, a car set to 100% will continue past 80% even when HA is
+responsible for start/stop times. Optional trip workflows may temporarily raise
+the target and restore the prior value; the normal Charge now button does not.
+
 ## Physical evidence and next test
 
 The installed test confirmed an actual stop and accepted a32A setting. The

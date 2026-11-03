@@ -1,0 +1,19 @@
+# Optional card: replace these three entity IDs with your vehicle integration's
+# entities, then add this card to the Charging view. No vehicle credentials here.
+type: vertical-stack
+cards:
+  - type: entities
+    title: Vehicle battery target
+    show_header_toggle: false
+    entities:
+      - entity: number.your_vehicle_ac_charging_limit
+        name: AC charge target
+      - entity: sensor.your_vehicle_ev_battery_level
+        name: Reported battery level
+      - entity: sensor.your_vehicle_last_updated_at
+        name: Vehicle report time
+  - type: markdown
+    content: >-
+      The car enforces this target. Changing it uses your vehicle integration;
+      cloud reports may lag. Start charging now keeps the target unchanged.
+      The Lectron local connection does not report battery percentage.

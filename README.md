@@ -146,6 +146,13 @@ It uses native HA cards. Adapt the entity IDs if you chose a different device
 name. Daily/monthly helper values initially cover only live collection; an
 imported statistics chart and a utility-meter state are different things.
 
+To control the car's AC battery target from this dashboard, add
+[`home-assistant/vehicle-card.example.yaml`](home-assistant/vehicle-card.example.yaml)
+as a card and replace its three placeholder entity IDs with those from your
+vehicle integration. The charger itself does not report battery percentage.
+Turning off a vehicle schedule does not set its AC target; retain your desired
+normal target (for example 80%). See [battery target behavior](docs/charging-control.md#battery-target-percentage).
+
 For Home Assistant's **Energy → Individual devices**, select
 `sensor.lectron_v_box_pro_total_energy`. It has energy/kWh/total_increasing
 semantics. Do not select session energy: it resets or retains a previous session.
