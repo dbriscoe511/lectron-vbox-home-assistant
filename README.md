@@ -1,7 +1,7 @@
 # Lectron V-BOX Pro in Home Assistant
 
 Local monitoring for the **Lectron V-BOX Pro NACS Wi-Fi** EV charger using an
-exact device profile for [Tuya Local](https://github.com/make-all/tuya-local).
+exact device profile for [Tuya Local](https://github.com/make-all/tuya-local). Turns oht these boxes are tuya in disguse
 Includes a charging dashboard, energy helpers, optional flat-rate cost estimates,
 and tools for preparing historical energy statistics.
 
@@ -26,22 +26,8 @@ not establish compatibility with every product revision.
 This release writes only **charging request DP18** and the manufacturer-supported
 **current settings DP4**. The generic schema's255A maximum is not a hardware or
 installation limit. Charging mode, protection, schedule and energy reset DPs
-remain unwritable. See [charging controls](docs/charging-control.md) for bounded
-start/stop scripts, optional vehicle hooks and the five-minute observation window.
+remain unwritable. (charging schedule is easy to automate, excersize left to reader)
 
-This firmware sends a **12-byte phase packet**:2-byte voltage,3-byte current,
-3-byte power, then4 unidentified bytes. Voltage/current were compared with the
-Lectron app during an actual charge. Power uses the same packet and is consistent
-with voltage/current; an independent power-meter comparison remains outstanding.
-The trailing bytes are not exposed as energy or time without a verified meaning.
-Voltage/current/power require a present packet and reported charging state;
-missing data is not converted to zero or carried indefinitely from another session.
-
-DP25 can retain the last completed session or checkpoint during a new charge;
-it is not a continuously updated session counter. `Session ended` does not mean
-`Battery full`. Vehicle battery percentage/range/ETA come from a separate vehicle
-integration. See [OCPP and reusable framework findings](docs/ocpp.md) and
-[charging schedule/manual override behavior](docs/scheduling.md).
 
 ## Tested setup
 
@@ -54,12 +40,7 @@ integration. See [OCPP and reusable framework findings](docs/ocpp.md) and
 | Home Assistant | 2026.10.4 Container |
 | Tuya Local | 2026.10.0 |
 
-The unit's own manufacturer schema confirms energy scale 2 (raw /100 kWh),
-power scale 3 (raw /1000 kW), and internal temperature in **Fahrenheit**, not
-Celsius. See [the datapoint specification](docs/datapoints.json) and
-[verification notes](docs/verification.md). Other EVSE profiles are useful
-references, but do not select an approximate one: their fault bits, units and
-writable controls can differ.
+
 
 ## Setup
 
@@ -71,21 +52,12 @@ address. Match local discovery to the MAC in Device Information.
 
 [TinyTuya](https://github.com/jasonacox/tinytuya#network-scanner) can discover
 devices with `python -m tinytuya scan`. Discovery does not reveal the local key.
-The key is private and changes if you re-pair the charger. Keep it out of Git,
-screenshots, issues and command-line arguments.
+The key is private and changes if you re-pair the charger. 
 
-Smart Life/Tuya Smart users can use their supported key-retrieval flows. A
-Lectron-only account is a separate case: the tested Lectron app did not expose a
-User Code. This installation recovered the key from the owner's logged-in Android
-app SDK in a backed-up emulator. That is an advanced, version-dependent process;
-this repo does not bundle Android APKs, login sessions or a promise that Lectron
-works with Smart Life QR authorization. Do not reset a working charger merely to
-try a key-retrieval guide.
+The easiest way to get the key is by having the android app, through a phone or an emulator, logged into the lectron account. 
+Then, run the tuya key extractor to grab the encription key. i dunno, have codex or your favorite chinese agent help you with this step. 
 
 ### 2. Install the profile and transport
-
-First back up your Home Assistant configuration. This is a **profile overlay
-repository**, not a separately installable HACS integration.
 
 **Existing Tuya Local installation:** copy `devices/lectron_vbox_pro.yaml` into
 `<HA config>/custom_components/tuya_local/devices/`, then restart Home Assistant.
@@ -103,11 +75,6 @@ python3 -m venv .venv
 .venv/bin/pip install 'PyYAML>=6,<7'
 .venv/bin/python tools/install_profile.py --config-dir /path/to/ha/config --bootstrap
 ```
-
-The installer never replaces an existing Tuya Local installation. It prints the
-installed version, stages a fresh transport atomically and backs up a differing
-existing Lectron profile. If you already have Tuya Local, omit `--bootstrap`.
-Do not install a second local Tuya integration against this same charger.
 
 ### 3. Add the charger
 
@@ -200,7 +167,7 @@ only maps data into HA entities; it does not implement a second poller.
 - [Related Vevor EVSE profile](https://github.com/make-all/tuya-local/blob/main/custom_components/tuya_local/devices/vevor_l2_ev_charger.yaml)
 - [Wallbox entity/energy presentation](https://www.home-assistant.io/integrations/wallbox/)
 - [OCPP integration](https://github.com/lbbrhzn/ocpp) — useful EVSE modeling reference;
-  this charger has not been shown to expose OCPP.
+  this charger has not been shown to expose OCPP. and almost certified doesnt have it since the native lectron app has no charging % display
 - [HA coordinator/data guidance](https://contributors.home-assistant.io/core/integrations/fetching-data/)
 - [HA sensor/statistics semantics](https://contributors.home-assistant.io/core/entities/sensor/)
 
