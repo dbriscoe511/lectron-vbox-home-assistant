@@ -19,16 +19,21 @@ not establish compatibility with every product revision.
 - Session energy from the phase packet's final four bytes: big-endian /100 kWh.
   The full raw packet is saved as an attribute for later decoding checks.
 - Current selector:16/32/40/48A (48A requires suitable hardwiring).
+- Mode selector: Plug and Charge, Manual Start, and Scheduled Charge.
 - Charging mode, firmware, pilot state, charge request and hardwired detection.
 - Home Assistant Energy-compatible cumulative energy statistics.
 - Daily/monthly live energy meters and a native dashboard with no custom cards.
 - Weekday17:00–21:00 automatic block (America/Denver), with a manual session override.
 - Optional power readings when the charger actually reports them.
 
-This release writes only **charging request DP18** and the manufacturer-supported
-**current settings DP4**. The generic schema's255A maximum is not a hardware or
-installation limit. Charging mode, protection, schedule and energy reset DPs
-remain unwritable. (charging schedule is easy to automate, excersize left to reader)
+Controls write **charging request DP18**, **current DP4**, and **mode DP14**.
+Mode changes are available while the charger is stopped. Native app schedules
+can be enabled by selecting Scheduled Charge; editing those schedules stays in
+the Lectron app. The HA package also includes its own weekday schedule.
+The generic schema's255A maximum is not a hardware or installation limit.
+
+The [custom dashboard](home-assistant/dashboard.yaml) includes charger controls,
+session energy, and daily/monthly energy charts. See [setup](#4-add-energy-helpers-and-the-dashboard).
 
 
 ## Tested setup

@@ -152,9 +152,9 @@ def test_missing_phase_energy_is_unavailable_not_zero_or_dp25(config, state):
 def test_profile_only_writes_charging_request_and_excludes_sensitive_controls(config):
     raw = yaml.safe_load(PROFILE.read_text())
     writable = [item for item in raw['entities'] if item['entity'] not in {'sensor', 'binary_sensor'}]
-    assert len(writable) == 2
+    assert len(writable) == 3
     assert {x['entity'] for x in writable} == {'switch', 'select'}
-    assert {dp['id'] for x in writable for dp in x['dps']} == {4, 18}
+    assert {dp['id'] for x in writable for dp in x['dps'] if dp['name'] in {'switch', 'option'}} == {4, 14, 18}
     assert all(dp["id"] not in {11, 12, 16, 17, 19, 22, 33, 105} for ent in raw["entities"] for dp in ent["dps"])
     ids = [ent.config_id for ent in config.all_entities()]
     assert len(ids) == len(set(ids))
@@ -181,6 +181,37 @@ def test_current_selector_only_offers_manufacturer_settings(config, state):
     assert select.current_option == '32 A'
     asyncio.run(select.async_select_option('40 A'))
     mock.async_set_properties.assert_awaited_once_with({'4': 40})
+
+
+@pytest.mark.parametrize('option,raw', [
+    ('Plug and charge', 'charge_now'),
+    ('Manual start', 'charge_manual'),
+    ('Scheduled charge', 'charge_schedule'),
+])
+def test_operating_mode_writes_only_dp14(config, state, option, raw):
+    state.update({'3': 'charger_pause', '14': 'charge_now'})
+    mock = device(state)
+    mock.async_set_properties = AsyncMock()
+    select = TuyaLocalSelect(mock, entity(config, 'Operating mode'))
+    assert select.options == ['Plug and charge', 'Manual start', 'Scheduled charge']
+    asyncio.run(select.async_select_option(option))
+    mock.async_set_properties.assert_awaited_once_with({'14': raw})
+
+
+def test_operating_mode_cannot_change_during_charging(config, state):
+    state.update({'3': 'charger_charging', '14': 'charge_now'})
+    mock = device(state)
+    mock.async_set_properties = AsyncMock()
+    select = TuyaLocalSelect(mock, entity(config, 'Operating mode'))
+    with pytest.raises(AttributeError):
+        asyncio.run(select.async_select_option('Manual start'))
+    mock.async_set_properties.assert_not_awaited()
+
+
+@pytest.mark.parametrize('status', ['charger_charging', 'charger_fault', 'charger_free_fault', 'future', None])
+def test_operating_mode_unavailable_when_not_known_idle(config, state, status):
+    state['3'] = status
+    assert value(config, state, 'Operating mode', 'available') is False
 
 
 @pytest.mark.parametrize('status', ['charger_free','charger_pause','charger_end','charger_fault','future',None])

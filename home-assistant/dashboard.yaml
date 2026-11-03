@@ -34,6 +34,8 @@ views:
             name: Charger request
           - entity: select.lectron_v_box_pro_charging_current
             name: Charging current
+          - entity: select.lectron_v_box_pro_operating_mode
+            name: Charger mode
           - entity: sensor.lectron_v_box_pro_status
             name: Status
           - entity: binary_sensor.lectron_v_box_pro_vehicle_connected

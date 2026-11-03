@@ -13,13 +13,14 @@ Tuya 3.5, HA 2026.10.4 and Tuya Local 2026.10.0 on 2026-11-01.
 | DP10 fault | Own schema bitmap; no-fault observed; synthetic multi-bit tests | No fault deliberately induced |
 | DP13 plug/pilot | Own enum; unplugged idle observed | Bad/unknown pilot produces Unknown, not Connected |
 | DP18 request/control | Actual DP3/pilot stop observed; restart with positive power after vehicle start request | Pending DP18 can be optimistic for5s; five-minute self-resume test remains outstanding |
+| DP14 operating mode | Scheduled Charge → Plug and Charge write confirmed in local cache, with no pending write; charging remained off | Manual Start behavior still needs the next charge; fixed-energy mode is not offered |
 | DP103 hardwired | Own boolean schema; device report observed | Does not verify wiring or permit changing installation current |
 | DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | Independent power-meter/app power comparison outstanding;DP5/9 were absent |
 | DP6 voltage/current |12-byte packet prefix compared with app during real charging; synthetic field-isolation tests | Limited to tested firmware/packet length |
 | DP6 session energy | Final four bytes interpreted as unsigned big-endian /100 kWh; short-charge stop matched DP25 and lifetime-meter increase | Four saved packets, two distinct values; reset timing and upper bytes still need a larger-session capture |
 | DP27 online state | Raw reported enum captured | Not used for availability; can say offline during a successful LAN read |
 
-Only the charging-request switch and supported current selector are writable.
+The charging-request switch, supported current selector and operating mode are writable.
 Current was briefly set to32A, then restored to40A; no protection setting changed. Continuous cloud-blocked operation,
 Wi-Fi outages, power failures and real charging transitions still need field
 testing. Configured availability is based on actual local connection health.

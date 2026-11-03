@@ -1,4 +1,4 @@
-# Unofficial Lectron profile. Only charging request DP18 and supported current DP4 are writable.
+# Unofficial Lectron profile. Writes: charging request, supported current, mode.
 # DP6 on tested firmware: V(2), I(3), P(3), session energy(4), big-endian.
 name: Lectron V-BOX Pro EV charger
 products:
@@ -253,6 +253,54 @@ entities:
       - id: 18
         type: boolean
         name: switch
+  - entity: select
+    name: Operating mode
+    category: config
+    icon: mdi:ev-station
+    dps:
+      - id: 14
+        type: string
+        name: option
+        mapping:
+          - dps_val: charge_now
+            value: Plug and charge
+            constraint: charging_state
+            conditions:
+              - dps_val: charger_charging
+                invalid: true
+          - dps_val: charge_manual
+            value: Manual start
+            constraint: charging_state
+            conditions:
+              - dps_val: charger_charging
+                invalid: true
+          - dps_val: charge_schedule
+            value: Scheduled charge
+            constraint: charging_state
+            conditions:
+              - dps_val: charger_charging
+                invalid: true
+          - value: null
+            hidden: true
+      - id: 3
+        type: string
+        name: charging_state
+        hidden: true
+      - id: 3
+        type: string
+        name: available
+        mapping:
+          - dps_val: charger_free
+            value: true
+          - dps_val: charger_insert
+            value: true
+          - dps_val: charger_wait
+            value: true
+          - dps_val: charger_pause
+            value: true
+          - dps_val: charger_end
+            value: true
+          - value: false
   - entity: binary_sensor
     name: Charge request
     category: diagnostic
@@ -269,6 +317,7 @@ entities:
       - id: 103
         type: boolean
         name: sensor
+        optional: true
   - entity: sensor
     name: Firmware
     category: diagnostic

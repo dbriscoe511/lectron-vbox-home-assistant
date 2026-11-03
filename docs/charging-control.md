@@ -55,6 +55,26 @@ also cancels a running vehicle-start hook, then sends DP18off without requiring 
 vehicle-stop hook. No delayed DP18on is sent after the vehicle hook. A cloud
 command already dispatched cannot be recalled; the charger stop remains separate.
 
+## Charger mode
+
+`select.lectron_v_box_pro_operating_mode` writes DP14:
+
+| HA option | Charger value |
+| --- | --- |
+| Plug and charge | `charge_now` |
+| Manual start | `charge_manual` |
+| Scheduled charge | `charge_schedule` |
+
+The control is available only for known stopped states, and rejects changes
+while charging. Switching Scheduled charge back to Plug and charge was verified
+with local charger feedback and no pending write. Manual start still needs a
+physical charge test. Native schedule entries stay in the Lectron app; choosing
+a mode does not create or delete schedules or disable the HA weekday policy.
+
+The schema also lists `charge_energy`, but that mode is absent from the tested
+app UI and DP17's kWh scaling is unverified. It is not offered by this selector.
+See [the command audit](command-audit.md) for the remaining fields and test plan.
+
 ## Optional vehicle hooks
 
 Copy [vehicle-hooks.example.yaml](../home-assistant/vehicle-hooks.example.yaml)
