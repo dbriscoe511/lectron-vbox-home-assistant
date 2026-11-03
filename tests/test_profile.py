@@ -106,7 +106,7 @@ def test_missing_power_is_unavailable_and_does_not_persist(config, state, name, 
     assert value(config, state, name, "available") is True
 
 
-def test_twelve_byte_phase_decoder_ignores_unidentified_tail(config, state):
+def test_twelve_byte_phase_fields_are_independent(config, state):
     packet = (2400).to_bytes(2, "big") + (32000).to_bytes(3, "big") + (7680).to_bytes(3, "big") + (0xDEADBEEF).to_bytes(4, "big")
     state["6"] = base64.b64encode(packet).decode()
     assert value(config, state, "Voltage") == 240
@@ -116,6 +116,37 @@ def test_twelve_byte_phase_decoder_ignores_unidentified_tail(config, state):
     assert value(config, state, 'Voltage') == 240
     assert value(config, state, 'Current') == 32
     assert value(config, state, 'Charging power') == 7.68
+
+
+@pytest.mark.parametrize('raw_energy,expected', [
+    (0, 0), (52, 0.52), (170, 1.70), (256, 2.56),
+    (65536, 655.36), (0x01020304, 169090.60),
+])
+def test_phase_session_energy_uses_all_four_tail_bytes(config, state, raw_energy, expected):
+    prefix = (2400).to_bytes(2, 'big') + (32000).to_bytes(3, 'big') + (7680).to_bytes(3, 'big')
+    state['6'] = base64.b64encode(prefix + raw_energy.to_bytes(4, 'big')).decode()
+    assert value(config, state, 'Phase session energy') == pytest.approx(expected)
+    state['6'] = base64.b64encode(bytes(8) + raw_energy.to_bytes(4, 'big')).decode()
+    assert value(config, state, 'Phase session energy') == pytest.approx(expected)
+
+
+@pytest.mark.parametrize('status', ['charger_charging', 'charger_pause', 'charger_end'])
+def test_phase_session_energy_retains_reported_value_when_stopped(config, state, status):
+    state['3'] = status
+    state['6'] = base64.b64encode(bytes(8) + (170).to_bytes(4, 'big')).decode()
+    sensor = TuyaLocalSensor(device(state), entity(config, 'Phase session energy'))
+    assert sensor.native_value == 1.70
+    assert value(config, state, 'Phase session energy', 'available') is True
+    assert sensor.extra_state_attributes['raw_phase_packet'] == state['6']
+    assert sensor.state_class is None
+
+
+def test_missing_phase_energy_is_unavailable_not_zero_or_dp25(config, state):
+    sensor = TuyaLocalSensor(device(state), entity(config, 'Phase session energy'))
+    assert sensor.native_value is None
+    assert value(config, state, 'Phase session energy', 'available') is False
+    assert 'raw_phase_packet' not in sensor.extra_state_attributes
+    assert all(not dp.persist for dp in entity(config, 'Phase session energy').dps())
 
 
 def test_profile_only_writes_charging_request_and_excludes_sensitive_controls(config):

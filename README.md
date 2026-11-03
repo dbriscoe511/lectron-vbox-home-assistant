@@ -16,6 +16,8 @@ not establish compatibility with every product revision.
 - Local charger status, plug/charging indicators and fault reporting.
 - Cumulative energy, reported session/checkpoint energy, internal temperature,
   live voltage/current/power and the configured current limit.
+- Session energy from the phase packet's final four bytes: big-endian /100 kWh.
+  The full raw packet is saved as an attribute for later decoding checks.
 - Current selector:16/32/40/48A (48A requires suitable hardwiring).
 - Charging mode, firmware, pilot state, charge request and hardwired detection.
 - Home Assistant Energy-compatible cumulative energy statistics.
@@ -138,12 +140,6 @@ without a manual flag and check `binary_sensor.lectron_charging_allowed`.
 See [policy and recovery details](docs/scheduling.md).
 
 ## Updates and removal
-
-If upgrading from the initial profile, enable Voltage and Current in their HA
-entity settings if they remain disabled. Existing entity names/identities are
-preserved; the power sensor now uses the tested DP6 packet instead of absent DP9.
-The new current selector may require adapting its entity ID if HA includes an
-area name. Configure optional vehicle hooks separately as documented.
 
 Tuya Local updates can overwrite or remove this custom profile. After each
 transport update, reapply it, validate and reload/restart. Until upstream accepts

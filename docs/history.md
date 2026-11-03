@@ -105,26 +105,3 @@ An imported chart does not calibrate utility-meter helper states. Those helpers
 initially count from installation. Do not adjust live sums or calibrate today's
 helper merely to make lifetime/cloud totals agree: missing periods, losses and
 counter changes must remain explicit.
-
-## Advanced: a single continuous live sensor
-
-The installed development system also tested a one-time migration into the
-existing recorder sensor statistic. This is **not what the shipped external-only
-importer does**. It requires proving a clean handoff: unchanged lifetime meter
-between the cloud cutoff and the first local sample, with no overlapping energy.
-
-Privately export existing hourly/five-minute rows and metadata first. Preserve
-the original metadata and an immutable target sum at one fixed live anchor.
-Import history strictly before the first live hour (omit historical `state`
-unless actual cumulative readings exist). Then adjust both live statistics
-tables through `recorder/adjust_sum_statistics`, starting at the first live
-five-minute timestamp, by **target anchor sum minus current anchor sum**.
-Never blindly add the recovered total again. Verify queued writes, daily/monthly
-totals, the anchor, and newly generated five-minute/hourly rows before completing
-the operation. Keep an operation manifest for safe retries.
-
-Preserve real hourly data for a partial cutoff day if available; exclude future
-zero buckets. Do not force an unexplained lifetime-meter difference into recovered
-usage. If the cutoff or units cannot be established, use the separate external
-series instead. This advanced path needs an installation-specific review; no
-generic automated same-sensor rewrite is included.
