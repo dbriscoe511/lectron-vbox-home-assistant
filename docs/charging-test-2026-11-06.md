@@ -86,9 +86,43 @@ Those are consistent with the surrounding 9.34–9.37 kW reports at the counter'
 0.01 kWh resolution. Missing power samples prevent a complete measured-power
 integral, and all these readings come from the same charger.
 
-Natural charging completion and a physical unplug/replug cycle remain pending.
-The retained counter must not be presented as an accumulating lifetime meter or
-assumed to reset on every start request.
+The overnight stop and final meter readings were captured below. No physical
+unplug/replug or counter reset was observed during this capture. The retained
+counter must not be presented as an accumulating lifetime meter or assumed to
+reset on every start request.
+
+## Unattended stop — November 7
+
+At 01:04:41.596, the charger changed from `charging` to `paused`. The charging
+request and charging binary sensor turned off, while the vehicle remained
+connected. No fault was reported. The car stayed connected through the final
+sample at 05:08:24.
+
+No preceding HA charging-stop action was found in the captured Lectron script/
+automation states or the 01:03–01:07 logbook. Another HA automation reacted to
+the charging-Off report after the transition; it did not precede it. The existing
+vehicle integration's next cached report showed 80% at 01:05, with the AC limit
+still 80%. This is consistent with the car reaching its onboard limit, but the
+cached percentage and charger reports do not establish the stop's cause. No
+manual vehicle query, wake, target write or charging command was sent for this
+review.
+
+At 01:04:42.139, DP6 packet `AAAAAAAAAAAAAA5Z` reported zero V/I/P and retained
+**36.73 kWh** (`00 00 0e 59`, 3673 / 100). DP25 reported **35.08 kWh** for the
+final uninterrupted charging segment. The lifetime meter increased **36.73 kWh**
+from the pre-plug baseline, exactly matching DP6 and the three completed
+segments: 1.59 + 0.06 + 35.08 = 36.73 kWh.
+
+The lifetime meter also updated during charging, about hourly after the final
+restart. Its three hourly increments were 9.35, 9.41 and 9.45 kWh, followed by
+6.87 kWh at the stop. These add to the final segment's 35.08 kWh. They agree with
+the surrounding roughly 9.4 kW phase reports, but remain readings from the same
+charger rather than an independent meter check.
+
+The temporary collector exited successfully at its eight-hour limit, with its
+last sample at 05:08:24. The final review found stored phase-packet history in
+HA Recorder. That existing history capture remains enabled. Scheduled reviews
+end here; unplug/reset behavior remains unverified.
 
 ## Reporting gaps
 
@@ -105,7 +139,9 @@ phase sensors became unavailable between these sparse reports.
 
 This is a reporting limitation to resolve or document before upstream submission.
 Do not replace missing samples with zero or retain stale power as current.
-Passive capture continues.
+The final stop packet retained energy, then phase energy became unavailable again
+at 01:04:58.014. The temporary capture is complete; existing Recorder history
+continues.
 An explicit DP6 refresh through Tuya Local's existing `force` mechanism is a
 possible follow-up, but has not been applied or tested on this charger.
 

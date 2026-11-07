@@ -2,7 +2,8 @@
 
 Not submitted. Tuya Local currently has new-device PR submissions paused.
 The [November 6 charging test](charging-test-2026-11-06.md) covers the controls.
-Remaining passive observations are listed in the [command audit](command-audit.md).
+The completed overnight capture and remaining gaps are listed in the
+[command audit](command-audit.md).
 
 Prepared checkout: `/home/danb/Desktop/code/tuya-local-lectron-upstream`, branch
 `lectron-vbox-pro`, commit `2d713c5`. The patch contains the new device YAML and
@@ -28,11 +29,15 @@ Automatic plug-in charging worked, with five minutes observed before test
 commands. At a stop, phase session energy matched DP25 and the lifetime-meter
 increase; a local restart retained the counter. At the second stop, DP25 and
 the lifetime-meter delta were 0.06 kWh while DP6 retained 1.65 kWh across the
-pause. Raw DP6 energy later carried into the next byte at 2.67 kWh and reached
-3.29 kWh. Natural completion and a physical unplug/replug reset remain pending.
+pause. Raw DP6 energy carried into the next byte at 2.67 kWh and retained
+36.73 kWh when charging stopped overnight with the car still plugged in. That
+matched the lifetime-meter increase and the sum of the three completed charging
+segments. The next cached vehicle report showed 80%; the stop's cause isn't
+confirmed. Physical unplug/replug reset is still unverified.
 Details and timings are in the [charging test](charging-test-2026-11-06.md).
-DP6 reports resumed after a four-minute gap but remained sparse; that is still
-an open telemetry issue.
+DP6 reports resumed after a four-minute gap but remained sparse, and the phase
+sensor became unavailable again after the final packet. That is still an open
+telemetry issue.
 
 The schema includes a kWh-charge mode that doesn't show up in my Lectron app.
 Its command units aren't confirmed, so it isn't exposed. Alarm/protection blobs,

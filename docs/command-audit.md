@@ -45,9 +45,16 @@ delta at a stop and retained its value across a local restart without unplugging
 The raw counter has now carried into the next byte: `00 00 01 0b` = 2.67 kWh,
 followed by 2.98 and 3.29 kWh. DP6 retained energy across local pauses, while DP25
 and the lifetime meter reflected each completed segment (1.59 then 0.06 kWh).
-Continue capturing natural session completion and a physical unplug/replug reset.
-Those remain pending until actual reports are saved. DP6 reports resumed after
-a four-minute gap but remained sparse, with two-minute intervals;
+The unattended overnight stop was captured at 01:04 MST November 7: status
+`paused`, vehicle still connected, zero V/I/P with DP6 retaining 36.73 kWh.
+DP25's final 35.08 kWh segment plus the two test segments exactly matched DP6
+and the lifetime-meter delta. The next cached vehicle report showed 80%, but
+that does not prove the cause of the stop. No preceding HA stop action was
+found in the inspected charging activity.
+
+The bounded capture is complete. Physical unplug/replug reset remains unverified;
+no more scheduled checks are planned. Existing HA Recorder packet history stays
+enabled. DP6 reports resumed after a four-minute gap but remained sparse;
 see the charging evidence before treating live telemetry as fully validated.
 Do not induce electrical faults or reset counters as a validation test.
 
@@ -67,5 +74,5 @@ generate one. Private keys, meter IDs and network/account identifiers stay out
 of the submission.
 
 The new-device template currently says submissions are paused. The upstream
-patch and PR description can be prepared now; the remaining passive observations above are still
-pending. The completed physical checks are linked separately.
+patch and PR description remain prepared and unsubmitted. The completed checks,
+telemetry limitation and unverified unplug/reset behavior are documented above.
