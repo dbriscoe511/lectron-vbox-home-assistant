@@ -52,10 +52,14 @@ and the lifetime-meter delta. The next cached vehicle report showed 80%, but
 that does not prove the cause of the stop. No preceding HA stop action was
 found in the inspected charging activity.
 
-The bounded capture is complete. Physical unplug/replug reset remains unverified;
-no more scheduled checks are planned. Existing HA Recorder packet history stays
-enabled. DP6 reports resumed after a four-minute gap but remained sparse;
-see the charging evidence before treating live telemetry as fully validated.
+The overnight capture is complete. Physical unplug at 11:03 MST November 7
+produced an all-zero DP6 packet, resetting phase session energy while DP25 and
+the lifetime meter retained their readings. Next plug-in behavior remains
+unverified. Explicit DP6 refresh is now installed, with a bounded private
+next-cycle capture armed and no scheduled conversational checks. Existing HA
+Recorder packet history stays enabled. Overnight DP6 reports resumed after a
+four-minute gap but remained sparse; see the charging evidence before treating
+live telemetry as fully validated.
 Do not induce electrical faults or reset counters as a validation test.
 
 ## Upstream evidence and checks
@@ -75,4 +79,4 @@ of the submission.
 
 The new-device template currently says submissions are paused. The upstream
 patch and PR description remain prepared and unsubmitted. The completed checks,
-telemetry limitation and unverified unplug/reset behavior are documented above.
+telemetry limitation and remaining next-plug-in observation are documented above.

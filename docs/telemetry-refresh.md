@@ -1,7 +1,8 @@
 # DP6 refresh trial — November 7, 2026
 
-Prepared for the next charging cycle. Charging performance with this option has
-not been validated yet.
+Installed in HA on November 7 at 11:07 MST after the car was unplugged.
+Configuration validation passed and the existing charger entry reloaded.
+Charging performance with this option has not been validated yet.
 
 The profile now marks the phase-energy sensor's read-only DP6 with `force: true`.
 Tuya Local registers that datapoint once and requests it through its existing
@@ -18,14 +19,24 @@ The next charge should establish:
 - Whether the explicit request produces a valid 12-byte DP6 response.
 - The interval between fresh phase reports and any unavailable periods.
 - Whether local start, charging and the eventual stop remain correctly reported.
-- Whether phase energy starts a new count after the physical unplug/replug.
+- Whether the next plug-in starts from the zero counter observed at unplug.
 
 Keep the existing 40 A setting and 80% vehicle target. Use HA Recorder's existing
 `raw_phase_packet` history for the next cycle. No repeated current/start/stop
 experiments or vehicle wakes are needed to test telemetry freshness.
 
-The unplug transition is being captured separately before activating this
-change, so it can be evaluated without confusing a reload with a device reset.
+Before activation, physical unplug at 11:03:02 MST produced DP6
+`AAAAAAAAAAAAAAAA`: all 12 bytes zero, including session energy. DP25 and the
+lifetime meter retained their completed readings. This reset preceded the reload.
+
+A private HA-state collector is armed for the next plug-in. It waits up to seven
+days, then captures for up to 12 hours from plug-in and finishes three minutes
+after charging stops or the vehicle disconnects. It samples existing HA states
+every 15 seconds while waiting and every two seconds during the cycle. Resuming
+within the end buffer continues the capture. It uses no extra Tuya connection,
+charging command or vehicle query. Existing Recorder history remains enabled.
+The temporary collector runs on the desktop; desktop sleep or shutdown can
+interrupt it. It records state changes, not every identical network frame.
 
 Validation: 108 local tests and 33 upstream config tests passed. A transport
 registration test confirms the only explicitly requested datapoint is DP6.

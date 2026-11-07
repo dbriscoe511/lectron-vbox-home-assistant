@@ -122,7 +122,7 @@ charger rather than an independent meter check.
 The temporary collector exited successfully at its eight-hour limit, with its
 last sample at 05:08:24. The final review found stored phase-packet history in
 HA Recorder. That existing history capture remains enabled. Scheduled reviews
-end here; unplug/reset behavior remains unverified.
+end here. Physical unplug was captured separately later that morning, below.
 
 ## Reporting gaps
 
@@ -150,3 +150,19 @@ as network packet loss.
 Raw captures and control timestamps stay private. This file contains selected
 validation results only. State capture records changes exposed by HA, including
 the DP6 attribute; it does not capture every identical network frame.
+
+
+## Physical unplug — November 7
+
+At 11:03:02.469 MST, connection changed to off and status to `available`.
+The phase-energy sensor reported 0.0 kWh with packet `AAAAAAAAAAAAAAAA`
+(all 12 bytes zero). DP25 retained 35.08 kWh and the lifetime meter did not change.
+This establishes a DP6 reset at physical unplug on this firmware. A local
+stop/restart earlier in the session had retained the counter. Next plug-in
+behavior still needs observation.
+
+The unplug packet was captured before the DP6 refresh profile was activated.
+The existing charger entry was subsequently reloaded while disconnected, after
+configuration validation passed. Current remained 40 A, mode immediate and the
+vehicle AC target 80%. The [next-cycle capture](telemetry-refresh.md) is armed;
+regular charging telemetry with explicit DP6 requests remains unverified.
