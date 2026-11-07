@@ -142,8 +142,10 @@ Do not replace missing samples with zero or retain stale power as current.
 The final stop packet retained energy, then phase energy became unavailable again
 at 01:04:58.014. The temporary capture is complete; existing Recorder history
 continues.
-An explicit DP6 refresh through Tuya Local's existing `force` mechanism is a
-possible follow-up, but has not been applied or tested on this charger.
+An explicit DP6 refresh through Tuya Local's existing `force` mechanism is
+prepared for a [separate next-cycle trial](telemetry-refresh.md). It was not
+active during this overnight test. The earlier gaps have not been established
+as network packet loss.
 
 Raw captures and control timestamps stay private. This file contains selected
 validation results only. State capture records changes exposed by HA, including

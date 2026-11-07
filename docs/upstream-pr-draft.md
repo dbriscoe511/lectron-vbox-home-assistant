@@ -6,7 +6,7 @@ The completed overnight capture and remaining gaps are listed in the
 [command audit](command-audit.md).
 
 Prepared checkout: `/home/danb/Desktop/code/tuya-local-lectron-upstream`, branch
-`lectron-vbox-pro`, commit `2d713c5`. The patch contains the new device YAML and
+`lectron-vbox-pro`, commit `238429f`. The patch contains the new device YAML and
 its supported-device entry, including the dashboard link.
 
 ## Title
@@ -37,7 +37,8 @@ confirmed. Physical unplug/replug reset is still unverified.
 Details and timings are in the [charging test](charging-test-2026-11-06.md).
 DP6 reports resumed after a four-minute gap but remained sparse, and the phase
 sensor became unavailable again after the final packet. That is still an open
-telemetry issue.
+telemetry issue. An explicit DP6 refresh is prepared for the next charging cycle;
+its effect during charging has not been validated yet.
 
 The schema includes a kWh-charge mode that doesn't show up in my Lectron app.
 Its command units aren't confirmed, so it isn't exposed. Alarm/protection blobs,
@@ -57,7 +58,7 @@ No transport/runtime changes.
 - Local HA diagnostics/status evidence, with identifiers and keys removed.
   The original discovery warning is no longer in the rotated HA logs; label
   this evidence accurately rather than fabricating a LOCAL DPS warning.
-- Pinned-overlay tests: 107 passed, including exact DP14 writes and rejecting
+- Pinned-overlay tests: 108 passed, including exact DP14 writes and rejecting
   mode changes during charging.
 - Current-upstream config tests: 33 passed.
 - `uv run untranslated_entities` passed.

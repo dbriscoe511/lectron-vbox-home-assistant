@@ -48,3 +48,7 @@ The weekday policy/manual override was validated in live HA while unplugged.
 Tests execute the real HA script engine for boundary crossings, stale policy,
 manual takeover, hook cancellation and recovery. No physical peak-window test
 was performed; HA/LAN downtime and raw charger autostart remain limitations.
+
+The November 7 [DP6 refresh trial](telemetry-refresh.md) enables explicit requests
+through the existing connection. It is prepared for next-cycle validation;
+regular live telemetry has not yet been established with that option.

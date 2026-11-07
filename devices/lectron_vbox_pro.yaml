@@ -66,6 +66,8 @@ entities:
         type: base64
         name: sensor
         optional: true
+        # Status polls omit DP6; request it on the existing connection.
+        force: true
         persist: false
         unit: kWh
         mask: "0000000000000000FFFFFFFF"

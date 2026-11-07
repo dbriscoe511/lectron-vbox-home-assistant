@@ -51,6 +51,23 @@ def test_energy_scale_and_state_classes(config, state):
     assert entity(config, "Session energy").find_dps("sensor").state_class is None
 
 
+def test_phase_refresh_registers_only_read_only_dp6(config):
+    from custom_components.tuya_local.device import TuyaLocalDevice
+
+    # Exercise the transport's registration, without creating a socket or running it.
+    transport = Mock()
+    transport._hass.is_running = True
+    transport._children = []
+    transport._force_dps = []
+    transport._running = True
+    transport.has_returned_state = True
+    for definition in config.all_entities():
+        child = Mock()
+        child._config = definition
+        TuyaLocalDevice.register_entity(transport, child)
+    assert transport._force_dps == [6]
+
+
 def test_temperature_is_fahrenheit(config, state):
     sensor = TuyaLocalSensor(device(state), entity(config, "Internal temperature"))
     assert sensor.native_value == 72
