@@ -1,8 +1,8 @@
 # Upstream PR draft
 
 Not submitted. Tuya Local currently has new-device PR submissions paused.
-The next normal charge will cover the remaining physical checks in the
-[command audit](command-audit.md).
+The [November 6 charging test](charging-test-2026-11-06.md) covers the controls.
+Remaining passive observations are listed in the [command audit](command-audit.md).
 
 Prepared checkout: `/home/danb/Desktop/code/tuya-local-lectron-upstream`, branch
 `lectron-vbox-pro`, commit `2d713c5`. The patch contains the new device YAML and
@@ -22,10 +22,14 @@ voltage/current/power, temperature, plug state and faults. Mode changes are
 disabled while charging. The device uses a 12-byte phase packet and reports
 temperature in Fahrenheit, so the existing Vevor profiles don't fit.
 
-Tested an actual stop and restart with reported power. The charger accepted a
-32 A setting, and 40 A charging was observed. Scheduled mode was switched back
-to Plug and Charge with local readback. Sustained 32 A, 48 A, Manual Start
-behavior and a complete session-energy reset are still to be checked.
+Tested actual draw at all four current settings, local stop/restart without
+vehicle hooks, Manual Start waiting for a request, and return to Plug and Charge.
+Automatic plug-in charging worked, with five minutes observed before test
+commands. At a stop, phase session energy matched DP25 and the lifetime-meter
+increase; a local restart retained the counter. Values above 2.55 kWh and a
+physical unplug/replug reset are still being captured. Details and timings are
+in the [charging test](charging-test-2026-11-06.md). The same capture exposed a
+longer DP6 reporting gap while charging; that remains an open telemetry issue.
 
 The schema includes a kWh-charge mode that doesn't show up in my Lectron app.
 Its command units aren't confirmed, so it isn't exposed. Alarm/protection blobs,
@@ -58,5 +62,5 @@ No transport/runtime changes.
 There is no separate PR template in the upstream repository. Follow its
 [agent instructions](https://github.com/make-all/tuya-local/blob/main/AGENTS.md)
 and [new-device evidence requirements](https://github.com/make-all/tuya-local/blob/main/.github/ISSUE_TEMPLATE/new-device.yaml).
-Update this draft after the next charge; don't change pending items to tested
+Update the pending passive checks as reports arrive; do not mark them tested
 without a matching local report or physical observation.

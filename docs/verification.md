@@ -1,29 +1,31 @@
 # Verification and known limits
 
 Verified against one Lectron V-BOX Pro NACS Wi-Fi, hardware V1.2/software V2.0.1,
-Tuya 3.5, HA 2026.10.4 and Tuya Local 2026.10.0 on 2026-11-01.
+Tuya 3.5, HA 2026.10.4 and Tuya Local 2026.10.0. Initial checks were on
+November 1, with [additional physical charging checks on November 6](charging-test-2026-11-06.md).
 
 | Data | Evidence | Limitation |
 | --- | --- | --- |
 | DP1 total energy | Own schema kWh/scale2; authenticated LAN and HA reading | Reset behavior/long-term monotonicity not independently stress-tested |
 | DP25 session energy | Own schema kWh/scale2; authenticated LAN and HA reading | Retains last session while idle; not an Energy source |
 | DP24 temperature | Own schema explicitly Fahrenheit; LAN/HA reading | Internal charger temperature, not ambient or battery temperature |
-| DP3 status | Full enum from own schema; idle state observed | Other physical charge/fault transitions remain to be observed |
-| DP4 current limit/control | Manufacturer settings16/32/40/48A;32A setting accepted and40A restored | Sustained32A draw and48A operation not tested;48A requires suitable hardwiring |
+| DP3 status | Full enum from own schema; unplugged, charging and session-ended transitions observed | Fault transitions were not induced |
+| DP4 current limit/control | 16/32/40/48 A settings produced sustained measured draw; original 40 A restored | Short functional windows, not a long thermal test; 48 A requires suitable hardwiring |
 | DP10 fault | Own schema bitmap; no-fault observed; synthetic multi-bit tests | No fault deliberately induced |
-| DP13 plug/pilot | Own enum; unplugged idle observed | Bad/unknown pilot produces Unknown, not Connected |
-| DP18 request/control | Actual DP3/pilot stop observed; restart with positive power after vehicle start request | Pending DP18 can be optimistic for5s; five-minute self-resume test remains outstanding |
-| DP14 operating mode | Scheduled Charge → Plug and Charge write confirmed in local cache, with no pending write; charging remained off | Manual Start behavior still needs the next charge; fixed-energy mode is not offered |
+| DP13 plug/pilot | Own enum; unplugged and charging reports observed | Bad/unknown pilot produces Unknown, not Connected |
+| DP18 request/control | Local stop/restart confirmed with positive power and no vehicle hook; automatic plug-in start observed for five minutes before test commands | Pending DP18 can be optimistic for 5 s; a request alone is not proof of power flow |
+| DP14 operating mode | Scheduled → Plug and Charge readback confirmed; Manual Start waiting, local start/stop and return to Plug and Charge verified | Selector becomes unavailable while charging; fixed-energy mode is not offered |
 | DP103 hardwired | Own boolean schema; device report observed | Does not verify wiring or permit changing installation current |
-| DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | Independent power-meter/app power comparison outstanding;DP5/9 were absent |
+| DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | DP5/9 absent; DP6 can disappear during charging, including a longer gap in the November 6 capture; independent meter comparison outstanding |
 | DP6 voltage/current |12-byte packet prefix compared with app during real charging; synthetic field-isolation tests | Limited to tested firmware/packet length |
-| DP6 session energy | Final four bytes interpreted as unsigned big-endian /100 kWh; short-charge stop matched DP25 and lifetime-meter increase | Four saved packets, two distinct values; reset timing and upper bytes still need a larger-session capture |
+| DP6 session energy | Final four bytes decoded as unsigned big-endian /100 kWh; November 6 stop matched DP25 and lifetime-meter delta, and local restart retained energy | Values above 2.55 kWh, natural end and physical unplug/replug reset still being captured |
 | DP27 online state | Raw reported enum captured | Not used for availability; can say offline during a successful LAN read |
 
 The charging-request switch, supported current selector and operating mode are writable.
-Current was briefly set to32A, then restored to40A; no protection setting changed. Continuous cloud-blocked operation,
-Wi-Fi outages, power failures and real charging transitions still need field
-testing. Configured availability is based on actual local connection health.
+All four supported current settings were exercised under load and 40 A was restored.
+No protection setting changed. Continuous cloud-blocked operation, Wi-Fi outages
+and power failures remain untested. Configured availability is based on actual
+local connection health.
 
 The public schema contains only selected manufacturer datapoint definitions.
 Private keys, app files, account cache, device IDs/MACs, real energy histories,

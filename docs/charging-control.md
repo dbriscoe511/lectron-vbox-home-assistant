@@ -67,9 +67,11 @@ command already dispatched cannot be recalled; the charger stop remains separate
 
 The control is available only for known stopped states, and rejects changes
 while charging. Switching Scheduled charge back to Plug and charge was verified
-with local charger feedback and no pending write. Manual start still needs a
-physical charge test. Native schedule entries stay in the Lectron app; choosing
-a mode does not create or delete schedules or disable the HA weekday policy.
+with local charger feedback and no pending write. Manual Start waiting, local
+start/stop and return to Plug and Charge were verified in the
+[November 6 charging test](charging-test-2026-11-06.md). Native schedule entries
+stay in the Lectron app; choosing a mode does not create or delete schedules or
+disable the HA weekday policy.
 
 The schema also lists `charge_energy`, but that mode is absent from the tested
 app UI and DP17's kWh scaling is unverified. It is not offered by this selector.
@@ -117,20 +119,19 @@ AC target. For example, a car set to 100% will continue past 80% even when HA is
 responsible for start/stop times. Optional trip workflows may temporarily raise
 the target and restore the prior value; the normal Charge now button does not.
 
-## Physical evidence and next test
+## Physical evidence
 
-The installed test confirmed an actual stop and accepted a32A setting. The
-vehicle briefly reported charging, then paused. Restoring40A and sending a
-Hyundai start request resumed reported charging with positive measured current
-and power. Sustained32A draw was not verified;48A was not tested. Persistence
-across unplug/replug remains unverified.
+The [November 6 charging test](charging-test-2026-11-06.md) confirmed measured
+draw at 16/32/40/48 A, local stop/restart without vehicle hooks, Manual Start
+waiting for a request, and restoration to 40 A/Plug and Charge. The automatic
+plug-in start worked without a manual vehicle query or wake; five full minutes
+were observed before test commands.
 
-Next time, observe the local charger for **five full minutes** after its start
-request before any manual vehicle query, refresh or command. Record DP3/pilot,
-DP18 and measured current/power. This tests whether the car resumes on its own;
-the earlier short test does not prove a vehicle wake is always necessary.
-Existing background integrations are separate from manual test calls. Preserve
-other schedules and protection settings.
+Session energy retained its value through a local pause/restart. Larger values,
+natural completion and a physical unplug/replug reset remain passive checks.
+Future tests should still allow five full minutes before manual vehicle queries,
+refreshes or wake commands. Existing background integrations are separate from
+manual test calls. Preserve the user's current battery target.
 
 See [the weekday policy](scheduling.md) for manual-session clearing, exact boundaries,
 restart behavior and the stable automatic-permission helper. In package YAML,

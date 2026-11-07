@@ -47,6 +47,8 @@ session energy, and daily/monthly energy charts. See [setup](#4-add-energy-helpe
 | Home Assistant | 2026.10.4 Container |
 | Tuya Local | 2026.10.0 |
 
+[Physical charging checks, November 6](docs/charging-test-2026-11-06.md): all four current settings, local stop/start, and mode control.
+
 
 
 ## Setup

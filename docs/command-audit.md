@@ -10,9 +10,9 @@ it is not represented as a response from that API.
 
 | DP | Function | Status |
 | --- | --- | --- |
-| 4 | Charging current | 16/32/40/48 A selector; 32 A setting accepted, 40 A restored and charging observed. Sustained 32 A and 48 A still need a charging test. |
-| 14 | Operating mode | Plug and Charge, Manual Start, Scheduled Charge. Local Scheduled → Plug and Charge write/readback verified. Manual Start needs the next charging test. |
-| 18 | Charging request | Start/stop supported; an actual stop and restart with positive power were observed. Vehicle acceptance remains separate. |
+| 4 | Charging current | 16/32/40/48 A selector; all four settings produced sustained measured draw during the November 6 test. Original 40 A restored. See [charging evidence](charging-test-2026-11-06.md). |
+| 14 | Operating mode | Plug and Charge, Manual Start, Scheduled Charge. Scheduled → Plug and Charge readback verified; November 6 testing confirmed Manual Start waits for a local request and switching back to Plug and Charge resumes charging. |
+| 18 | Charging request | Local stops and restart with positive power confirmed on November 6 without vehicle hooks. Vehicle acceptance remains separate. |
 
 Mode changes are disabled while charging or when the stopped state is unknown.
 The selector changes the native mode only. It does not create/delete Lectron
@@ -35,18 +35,17 @@ DP27's online status is not a useful user command despite its writable schema
 flag. DP22 identifies the private meter. None needs a write control for normal
 charging. No reset, protection or identity write is included.
 
-## Next normal charge
+## Remaining passive observations
 
-1. Save local packet/state history while plugged in and waiting.
-2. Request start and observe the local charger for five full minutes before any
-   manual vehicle query or wake command.
-3. Check measured current and power against the app, including a sustained
-   supported current change when practical.
-4. Verify Manual Start, stop/start feedback, and the transition back to Plug and
-   Charge while stopped. Preserve the user's original current and battery target.
-5. Compare phase session energy with DP25 and the lifetime-meter increase above
-   2.55 kWh; check pause/end and a real unplug/replug session reset.
+The [November 6 charging test](charging-test-2026-11-06.md) covered automatic
+startup, the five-minute observation, all four current settings, Manual Start,
+local stop/restart and restoration. DP6 energy matched DP25 and lifetime-meter
+delta at a stop and retained its value across a local restart without unplugging.
 
+Continue capturing energy above 2.55 kWh, natural session completion and a
+physical unplug/replug reset. These remain pending until the actual reports are
+saved. A longer DP6 reporting gap during charging is also under observation;
+see the charging evidence before treating live telemetry as fully validated.
 Do not induce electrical faults or reset counters as a validation test.
 
 ## Upstream evidence and checks
@@ -65,5 +64,5 @@ generate one. Private keys, meter IDs and network/account identifiers stay out
 of the submission.
 
 The new-device template currently says submissions are paused. The upstream
-patch and PR description can be prepared now; physical items above remain
-explicitly pending until the next charge.
+patch and PR description can be prepared now; the remaining passive observations above are still
+pending. The completed physical checks are linked separately.
