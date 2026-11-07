@@ -42,9 +42,12 @@ startup, the five-minute observation, all four current settings, Manual Start,
 local stop/restart and restoration. DP6 energy matched DP25 and lifetime-meter
 delta at a stop and retained its value across a local restart without unplugging.
 
-Continue capturing energy above 2.55 kWh, natural session completion and a
-physical unplug/replug reset. These remain pending until the actual reports are
-saved. A longer DP6 reporting gap during charging is also under observation;
+The raw counter has now carried into the next byte: `00 00 01 0b` = 2.67 kWh,
+followed by 2.98 and 3.29 kWh. DP6 retained energy across local pauses, while DP25
+and the lifetime meter reflected each completed segment (1.59 then 0.06 kWh).
+Continue capturing natural session completion and a physical unplug/replug reset.
+Those remain pending until actual reports are saved. DP6 reports resumed after
+a four-minute gap but remained sparse, with two-minute intervals;
 see the charging evidence before treating live telemetry as fully validated.
 Do not induce electrical faults or reset counters as a validation test.
 

@@ -7,7 +7,7 @@ November 1, with [additional physical charging checks on November 6](charging-te
 | Data | Evidence | Limitation |
 | --- | --- | --- |
 | DP1 total energy | Own schema kWh/scale2; authenticated LAN and HA reading | Reset behavior/long-term monotonicity not independently stress-tested |
-| DP25 session energy | Own schema kWh/scale2; authenticated LAN and HA reading | Retains last session while idle; not an Energy source |
+| DP25 session energy | Own schema kWh/scale2; two local stops matched the lifetime-meter segment deltas (1.59 then 0.06 kWh) | Reports the last completed charging segment in this test; differs from DP6 after a local restart; not an Energy source |
 | DP24 temperature | Own schema explicitly Fahrenheit; LAN/HA reading | Internal charger temperature, not ambient or battery temperature |
 | DP3 status | Full enum from own schema; unplugged, charging and session-ended transitions observed | Fault transitions were not induced |
 | DP4 current limit/control | 16/32/40/48 A settings produced sustained measured draw; original 40 A restored | Short functional windows, not a long thermal test; 48 A requires suitable hardwiring |
@@ -18,7 +18,7 @@ November 1, with [additional physical charging checks on November 6](charging-te
 | DP103 hardwired | Own boolean schema; device report observed | Does not verify wiring or permit changing installation current |
 | DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | DP5/9 absent; DP6 can disappear during charging, including a longer gap in the November 6 capture; independent meter comparison outstanding |
 | DP6 voltage/current |12-byte packet prefix compared with app during real charging; synthetic field-isolation tests | Limited to tested firmware/packet length |
-| DP6 session energy | Final four bytes decoded as unsigned big-endian /100 kWh; November 6 stop matched DP25 and lifetime-meter delta, and local restart retained energy | Values above 2.55 kWh, natural end and physical unplug/replug reset still being captured |
+| DP6 session energy | Final four bytes decoded as unsigned big-endian /100 kWh; first stop matched DP25/lifetime delta; local restart retained energy; real carry to `00 00 01 0b` = 2.67 kWh, later 3.29 kWh | Highest two bytes still zero; natural end and physical unplug/replug reset pending; sparse reports prevent a full power integral |
 | DP27 online state | Raw reported enum captured | Not used for availability; can say offline during a successful LAN read |
 
 The charging-request switch, supported current selector and operating mode are writable.

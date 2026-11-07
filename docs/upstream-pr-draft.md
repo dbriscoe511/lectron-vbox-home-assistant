@@ -26,10 +26,13 @@ Tested actual draw at all four current settings, local stop/restart without
 vehicle hooks, Manual Start waiting for a request, and return to Plug and Charge.
 Automatic plug-in charging worked, with five minutes observed before test
 commands. At a stop, phase session energy matched DP25 and the lifetime-meter
-increase; a local restart retained the counter. Values above 2.55 kWh and a
-physical unplug/replug reset are still being captured. Details and timings are
-in the [charging test](charging-test-2026-11-06.md). The same capture exposed a
-longer DP6 reporting gap while charging; that remains an open telemetry issue.
+increase; a local restart retained the counter. At the second stop, DP25 and
+the lifetime-meter delta were 0.06 kWh while DP6 retained 1.65 kWh across the
+pause. Raw DP6 energy later carried into the next byte at 2.67 kWh and reached
+3.29 kWh. Natural completion and a physical unplug/replug reset remain pending.
+Details and timings are in the [charging test](charging-test-2026-11-06.md).
+DP6 reports resumed after a four-minute gap but remained sparse; that is still
+an open telemetry issue.
 
 The schema includes a kWh-charge mode that doesn't show up in my Lectron app.
 Its command units aren't confirmed, so it isn't exposed. Alarm/protection blobs,

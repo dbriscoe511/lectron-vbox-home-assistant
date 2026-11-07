@@ -68,9 +68,27 @@ The stopped packet was `AAAAAAAAAAAAAACf`: zero V/I/P with energy retained.
 On local restart without unplugging, the energy counter retained 1.59 kWh and
 continued increasing. A local stop/start does not reset this observed counter.
 
-Values above 2.55 kWh, the natural charging end and a physical unplug/replug
-cycle are still being collected. The retained counter must not be presented as
-an accumulating lifetime meter or assumed to reset on every start request.
+At the second local stop, DP6 retained 1.65 kWh. DP25 reported 0.06 kWh,
+matching the additional 0.06 kWh on the lifetime meter since the first stop.
+In this test, DP6 accumulated across local pauses within the plugged session;
+DP25 reported the most recently completed charging segment. They should not be
+expected to match after each restart.
+
+At 21:27:41.718, packet `CVsAmfwAJJgAAAEL` had final bytes `00 00 01 0b`:
+267 / 100 = **2.67 kWh**, with 9.368 kW reported. This is real evidence of the
+carry beyond the final byte's 2.55 kWh range. Later packets reported 2.98 kWh at
+21:29:41.729 and 3.29 kWh at 21:31:41.742. The highest two energy bytes remained
+zero; this test has not exercised the full 32-bit range.
+
+The 2.04 → 2.67 kWh increase over four minutes implies about 9.45 kW average;
+the next two 0.31 kWh increases over two minutes each imply about 9.3 kW.
+Those are consistent with the surrounding 9.34–9.37 kW reports at the counter's
+0.01 kWh resolution. Missing power samples prevent a complete measured-power
+integral, and all these readings come from the same charger.
+
+Natural charging completion and a physical unplug/replug cycle remain pending.
+The retained counter must not be presented as an accumulating lifetime meter or
+assumed to reset on every start request.
 
 ## Reporting gaps
 
@@ -81,9 +99,13 @@ a longer gap was at 21:23:41.697, showing 2.04 kWh. The charging status remained
 on while phase energy, current and power became unavailable. No new Tuya Local
 warning/error was found in the HA log tail during this gap.
 
+Reports resumed at 21:27:41.718 after a four-minute gap, followed by reports at
+21:29:41.729 and 21:31:41.742, two minutes apart. Capture stayed healthy throughout;
+phase sensors became unavailable between these sparse reports.
+
 This is a reporting limitation to resolve or document before upstream submission.
-Do not replace missing samples with zero, retain stale power as current, or
-claim the larger counter range has been observed yet. Passive capture continues.
+Do not replace missing samples with zero or retain stale power as current.
+Passive capture continues.
 An explicit DP6 refresh through Tuya Local's existing `force` mechanism is a
 possible follow-up, but has not been applied or tested on this charger.
 
