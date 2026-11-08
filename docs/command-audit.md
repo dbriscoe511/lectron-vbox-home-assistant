@@ -54,9 +54,10 @@ found in the inspected charging activity.
 
 The overnight capture is complete. Physical unplug at 11:03 MST November 7
 produced an all-zero DP6 packet, resetting phase session energy while DP25 and
-the lifetime meter retained their readings. Next plug-in behavior remains
-unverified. Explicit DP6 refresh is now installed, with a bounded private
-next-cycle capture armed and no scheduled conversational checks. Existing HA
+the lifetime meter retained their readings. The next charge started DP6 at 0.00 kWh and ended at 15.18 kWh, matching DP25
+and the lifetime increase. Explicit DP6 refresh did not resolve telemetry gaps
+in that trial; the bounded capture completed without HA read errors. No
+scheduled conversational checks remain. Existing HA
 Recorder packet history stays enabled. Overnight DP6 reports resumed after a
 four-minute gap but remained sparse; see the charging evidence before treating
 live telemetry as fully validated.
@@ -79,4 +80,4 @@ of the submission.
 
 The new-device template currently says submissions are paused. The upstream
 patch and PR description remain prepared and unsubmitted. The completed checks,
-telemetry limitation and remaining next-plug-in observation are documented above.
+telemetry limitation and next-cycle results are documented above.

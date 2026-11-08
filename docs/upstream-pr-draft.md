@@ -35,12 +35,15 @@ matched the lifetime-meter increase and the sum of the three completed charging
 segments. The next cached vehicle report showed 80%; the stop's cause isn't
 confirmed. Physical unplug later produced an all-zero DP6 packet, resetting
 phase session energy; DP25 and the lifetime meter retained their readings.
-Next plug-in behavior is still unverified.
+The next charge started DP6 at zero and ended at 15.18 kWh, matching DP25
+and the lifetime increase.
 Details and timings are in the [charging test](charging-test-2026-11-06.md).
 DP6 reports resumed after a four-minute gap but remained sparse, and the phase
 sensor became unavailable again after the final packet. That is still an open
-telemetry issue. An explicit DP6 refresh is installed for the next charging cycle;
-its effect during charging has not been validated yet.
+telemetry issue. A second charge with explicit DP6 refresh still had roughly
+two-minute reports later in charging, with phase energy unavailable about 65%
+of the charging window. The collector had no HA read errors. Forced requests
+did not resolve the reporting gaps; see the [refresh trial](charging-test-2026-11-07.md).
 
 The schema includes a kWh-charge mode that doesn't show up in my Lectron app.
 Its command units aren't confirmed, so it isn't exposed. Alarm/protection blobs,

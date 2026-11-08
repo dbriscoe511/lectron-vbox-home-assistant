@@ -16,9 +16,9 @@ November 1, with [additional physical charging checks on November 6](charging-te
 | DP18 request/control | Local stop/restart confirmed with positive power and no vehicle hook; automatic plug-in start observed for five minutes before test commands | Pending DP18 can be optimistic for 5 s; a request alone is not proof of power flow |
 | DP14 operating mode | Scheduled → Plug and Charge readback confirmed; Manual Start waiting, local start/stop and return to Plug and Charge verified | Selector becomes unavailable while charging; fixed-energy mode is not offered |
 | DP103 hardwired | Own boolean schema; device report observed | Does not verify wiring or permit changing installation current |
-| DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | DP5/9 absent; DP6 can disappear during charging, including a longer gap in the November 6 capture; independent meter comparison outstanding |
+| DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | DP5/9 absent; DP6 can disappear during charging; November 7 forced-refresh trial still had sparse reports and unavailable periods; independent meter comparison outstanding |
 | DP6 voltage/current |12-byte packet prefix compared with app during real charging; synthetic field-isolation tests | Limited to tested firmware/packet length |
-| DP6 session energy | Final four bytes decoded as unsigned big-endian /100 kWh; real byte carry at 2.67 kWh; overnight zero-V/I/P packet retained 36.73 kWh, matching lifetime delta and completed-segment sum; physical unplug produced an all-zero DP6 packet before the refresh-trial reload | Highest two bytes still zero; next plug-in behavior unverified; sparse reports prevent a full power integral |
+| DP6 session energy | Final four bytes decoded as unsigned big-endian /100 kWh; real byte carry at 2.67 kWh; overnight zero-V/I/P packet retained 36.73 kWh, matching lifetime delta and completed-segment sum; physical unplug produced an all-zero DP6 packet before the refresh-trial reload; next charge started at zero and ended at 15.18 kWh matching DP25/lifetime | Highest two bytes still zero; sparse reports prevent a full power integral |
 | DP27 online state | Raw reported enum captured | Not used for availability; can say offline during a successful LAN read |
 
 The charging-request switch, supported current selector and operating mode are writable.
@@ -50,5 +50,7 @@ manual takeover, hook cancellation and recovery. No physical peak-window test
 was performed; HA/LAN downtime and raw charger autostart remain limitations.
 
 The November 7 [DP6 refresh trial](telemetry-refresh.md) enables explicit requests
-through the existing connection. It is installed and capture is armed for the
-next cycle; regular live telemetry has not yet been established with that option.
+through the existing connection. The [November 7 charge](charging-test-2026-11-07.md)
+matched all three energy readings at 15.18 kWh, but phase energy was unavailable
+for about 65% of charging time. Explicit refresh did not resolve the reporting
+gaps. The bounded collector finished successfully; Recorder stays enabled.
