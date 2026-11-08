@@ -6,8 +6,8 @@ The completed overnight capture and remaining gaps are listed in the
 [command audit](command-audit.md).
 
 Prepared checkout: `/home/danb/Desktop/code/tuya-local-lectron-upstream`, branch
-`lectron-vbox-pro`, commit `238429f`. The patch contains the new device YAML and
-its supported-device entry, including the dashboard link.
+`lectron-vbox-pro`, commit `71a19c0`. The branch is rebased on upstream main `ec004a5`. The patch contains only the new device YAML. Its header and the description
+link to the custom dashboard; the generated device catalog is left to upstream.
 
 ## Title
 
@@ -15,47 +15,29 @@ Add Lectron V-BOX Pro NACS Wi-Fi EV charger
 
 ## Description
 
-Turns out these are Tuya chargers. This adds a profile for the Lectron V-BOX Pro
-NACS Wi-Fi, tested on HW V1.2 / SW V2.0.1 over local protocol 3.5.
+Turns out these are Tuya chargers. This adds the Lectron V-BOX Pro NACS Wi-Fi,
+tested on HW V1.2 / SW V2.0.1 over local protocol 3.5.
 
-Includes start/stop, the 16/32/40/48 A current settings, operating mode, energy,
-voltage/current/power, temperature, plug state and faults. Mode changes are
-disabled while charging. The device uses a 12-byte phase packet and reports
-temperature in Fahrenheit, so the existing Vevor profiles don't fit.
+Includes start/stop, 16/32/40/48 A current settings, operating mode, energy,
+voltage/current/power, Fahrenheit temperature, plug state and faults. Mode
+changes are disabled while charging. The 12-byte phase packet differs from
+the existing Vevor profiles.
 
-Tested actual draw at all four current settings, local stop/restart without
-vehicle hooks, Manual Start waiting for a request, and return to Plug and Charge.
-Automatic plug-in charging worked, with five minutes observed before test
-commands. At a stop, phase session energy matched DP25 and the lifetime-meter
-increase; a local restart retained the counter. At the second stop, DP25 and
-the lifetime-meter delta were 0.06 kWh while DP6 retained 1.65 kWh across the
-pause. Raw DP6 energy carried into the next byte at 2.67 kWh and retained
-36.73 kWh when charging stopped overnight with the car still plugged in. That
-matched the lifetime-meter increase and the sum of the three completed charging
-segments. The next cached vehicle report showed 80%; the stop's cause isn't
-confirmed. Physical unplug later produced an all-zero DP6 packet, resetting
-phase session energy; DP25 and the lifetime meter retained their readings.
-The next charge started DP6 at zero and ended at 15.18 kWh, matching DP25
-and the lifetime increase.
-Details and timings are in the [charging test](charging-test-2026-11-06.md).
-Phase reports settled around two minutes apart during the second charge.
-The profile uses Tuya Local’s default retention between reports; voltage,
-current and power still require charging status. An earlier forced-refresh
-trial did not establish a need for forced requests, so that flag is removed.
-The earlier unavailable periods came from clearing cached DP6 on status polls
-that omitted it. Cache regression tests cover the revised behavior; it has not
-yet been recorded during another physical charge. Details are in the
-[reporting notes](telemetry-refresh.md).
+Tested actual draw at all four settings, local stop/restart without vehicle
+hooks, Manual Start and automatic plug-in charging. Phase session energy
+matched the completed-segment sum and lifetime increase at 36.73 kWh, and all
+three energy readings matched at 15.18 kWh on the next charge. Phase energy
+survives local pauses and resets at physical unplug.
 
-The schema includes a kWh-charge mode that doesn't show up in my Lectron app.
-Its command units aren't confirmed, so it isn't exposed. Alarm/protection blobs,
-counter resets and undocumented schedule payloads are also left alone.
+Phase reports settled around two minutes apart. The profile uses normal
+retention between reports and charging-status guards for power/current/voltage.
+Cache behavior is tested against the actual transport; another physical charge
+with the final retention setting is still pending. Unconfirmed fixed-energy,
+protection, reset and schedule-payload writes aren't exposed.
 
-There's an optional [custom dashboard](https://github.com/dbriscoe511/lectron-vbox-home-assistant#4-add-energy-helpers-and-the-dashboard)
-with charging controls and energy charts. The profile doesn't need it.
-
-AI-assisted config, checked against the device's own schema and local reports.
-No transport/runtime changes.
+There's an optional [custom dashboard](https://github.com/dbriscoe511/lectron-vbox-home-assistant#4-add-energy-helpers-and-the-dashboard).
+[Charging evidence](https://github.com/dbriscoe511/lectron-vbox-home-assistant/blob/main/docs/verification.md)
+is documented separately. AI-assisted device config; no runtime changes.
 
 ## Validation to attach
 
@@ -65,7 +47,7 @@ No transport/runtime changes.
 - Local HA diagnostics/status evidence, with identifiers and keys removed.
   The original discovery warning is no longer in the rotated HA logs; label
   this evidence accurately rather than fabricating a LOCAL DPS warning.
-- Pinned-overlay tests: 108 passed, including exact DP14 writes and rejecting
+- Pinned-overlay tests: 114 passed, including exact DP14 writes and rejecting
   mode changes during charging.
 - Current-upstream config tests: 33 passed.
 - `uv run untranslated_entities` passed.
@@ -75,8 +57,18 @@ No transport/runtime changes.
 - Ruff checks, import-order check, format check and device YAML lint passed.
   YAML lint reports one existing warning in an unrelated Marpou profile.
 
-There is no separate PR template in the upstream repository. Follow its
+Follow the [PR template](https://github.com/make-all/tuya-local/blob/main/.github/pull_request_template.md),
 [agent instructions](https://github.com/make-all/tuya-local/blob/main/AGENTS.md)
 and [new-device evidence requirements](https://github.com/make-all/tuya-local/blob/main/.github/ISSUE_TEMPLATE/new-device.yaml).
+The PR template requires one device per branch, no changes to `DEVICES.md` or
+`ACKNOWLEDGEMENTS.md`, and a short description. AI-assisted contributors must
+understand the changes and handle requested fixes. A separate bug report is
+required for runtime code changes; this patch adds only device YAML.
+
+Pre-submission review, November 8: the live new-device form still says PRs are
+temporarily paused. The original LOCAL DPS discovery warning is still missing;
+the saved SDK schema is an alternative data-model source, not the preferred
+original QueryThingsDataModel response. A normal charge with final retention
+is recommended; do not repeat the full current/mode tests just for that check.
 Update the pending passive checks as reports arrive; do not mark them tested
 without a matching local report or physical observation.
