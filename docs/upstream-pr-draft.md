@@ -38,12 +38,14 @@ phase session energy; DP25 and the lifetime meter retained their readings.
 The next charge started DP6 at zero and ended at 15.18 kWh, matching DP25
 and the lifetime increase.
 Details and timings are in the [charging test](charging-test-2026-11-06.md).
-DP6 reports resumed after a four-minute gap but remained sparse, and the phase
-sensor became unavailable again after the final packet. That is still an open
-telemetry issue. A second charge with explicit DP6 refresh still had roughly
-two-minute reports later in charging, with phase energy unavailable about 65%
-of the charging window. The collector had no HA read errors. Forced requests
-did not resolve the reporting gaps; see the [refresh trial](charging-test-2026-11-07.md).
+Phase reports settled around two minutes apart during the second charge.
+The profile uses Tuya Local’s default retention between reports; voltage,
+current and power still require charging status. An earlier forced-refresh
+trial did not establish a need for forced requests, so that flag is removed.
+The earlier unavailable periods came from clearing cached DP6 on status polls
+that omitted it. Cache regression tests cover the revised behavior; it has not
+yet been recorded during another physical charge. Details are in the
+[reporting notes](telemetry-refresh.md).
 
 The schema includes a kWh-charge mode that doesn't show up in my Lectron app.
 Its command units aren't confirmed, so it isn't exposed. Alarm/protection blobs,

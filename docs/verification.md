@@ -16,7 +16,7 @@ November 1, with [additional physical charging checks on November 6](charging-te
 | DP18 request/control | Local stop/restart confirmed with positive power and no vehicle hook; automatic plug-in start observed for five minutes before test commands | Pending DP18 can be optimistic for 5 s; a request alone is not proof of power flow |
 | DP14 operating mode | Scheduled → Plug and Charge readback confirmed; Manual Start waiting, local start/stop and return to Plug and Charge verified | Selector becomes unavailable while charging; fixed-energy mode is not offered |
 | DP103 hardwired | Own boolean schema; device report observed | Does not verify wiring or permit changing installation current |
-| DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | DP5/9 absent; DP6 can disappear during charging; November 7 forced-refresh trial still had sparse reports and unavailable periods; independent meter comparison outstanding |
+| DP6 power |12-byte raw packet, synthetic decoding tests and live power consistent with V/I | DP5/9 absent; later phase reports about two minutes apart; default cache retention now avoids clearing between reports; independent meter comparison outstanding |
 | DP6 voltage/current |12-byte packet prefix compared with app during real charging; synthetic field-isolation tests | Limited to tested firmware/packet length |
 | DP6 session energy | Final four bytes decoded as unsigned big-endian /100 kWh; real byte carry at 2.67 kWh; overnight zero-V/I/P packet retained 36.73 kWh, matching lifetime delta and completed-segment sum; physical unplug produced an all-zero DP6 packet before the refresh-trial reload; next charge started at zero and ended at 15.18 kWh matching DP25/lifetime | Highest two bytes still zero; sparse reports prevent a full power integral |
 | DP27 online state | Raw reported enum captured | Not used for availability; can say offline during a successful LAN read |
@@ -34,8 +34,10 @@ network addresses and HA configuration are not part of this repository.
 `sensor.lectron_v_box_pro_phase_session_energy` is separate from the DP25 session
 sensor and the DP1 lifetime meter. It has no accumulating statistics class and
 must not be used as an Energy dashboard source. A stopped packet can retain its
-energy while reporting zero V/I/P. If DP6 disappears, this sensor becomes
-unavailable rather than returning zero or falling back to DP25.
+energy while reporting zero V/I/P. DP6 uses Tuya Local’s default retention between reports. A status poll that
+omits it leaves the previous counter intact; before the first phase packet,
+the sensor remains unavailable. It never substitutes zero or DP25. Voltage,
+current and power still require the separate charging status to confirm charging.
 
 The sensor's `raw_phase_packet` attribute retains the complete Base64 DP6 value.
 Recorder can preserve packet changes under its existing include/exclude and
@@ -49,8 +51,10 @@ Tests execute the real HA script engine for boundary crossings, stale policy,
 manual takeover, hook cancellation and recovery. No physical peak-window test
 was performed; HA/LAN downtime and raw charger autostart remain limitations.
 
-The November 7 [DP6 refresh trial](telemetry-refresh.md) enables explicit requests
-through the existing connection. The [November 7 charge](charging-test-2026-11-07.md)
-matched all three energy readings at 15.18 kWh, but phase energy was unavailable
-for about 65% of charging time. Explicit refresh did not resolve the reporting
-gaps. The bounded collector finished successfully; Recorder stays enabled.
+The [November 7 charge](charging-test-2026-11-07.md) matched all three energy
+readings at 15.18 kWh. Later DP6 reports were about two minutes apart. The
+earlier nonpersistent profile cleared readings between reports; the
+[current profile](telemetry-refresh.md) uses default retention and no forced
+requests. Actual transport-cache regression tests pass; the revised retention
+has not yet been captured during another physical charge. The bounded
+collector finished successfully; Recorder stays enabled.

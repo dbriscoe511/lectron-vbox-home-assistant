@@ -1,5 +1,8 @@
 # DP6 refresh charging test — November 7, 2026
 
+This records the earlier trial. The [current profile](telemetry-refresh.md)
+uses default retention and no forced requests.
+
 All times are America/Denver (MST). The profile had `force: true` on DP6,
 with `persist: false` retained. Installed profile hash still matched the tested
 candidate at review. No configuration or charging controls changed for this review.
@@ -57,6 +60,7 @@ mode and the 80% AC target retained. That later state is not packet evidence of
 the unplug transition, which happened after this collector ended.
 
 Private original state logs, decoded packets and aggregate calculations remain
-outside this repository. Upstream PR remains unsubmitted. Reliable live DP6
-telemetry remains open; start/stop, current control and matching energy counters
-have separate physical evidence.
+outside this repository. Upstream PR remains unsubmitted. The later regular reporting cadence led to using Tuya Local’s default DP6
+retention. Revised cache behavior has transport tests; another physical charge
+with that revision has not yet been recorded. Start/stop, current control and
+matching energy counters have separate physical evidence.

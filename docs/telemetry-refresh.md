@@ -1,54 +1,57 @@
-# DP6 refresh trial — November 7, 2026
+# DP6 reporting and retention — November 7, 2026
 
-Installed in HA on November 7 at 11:07 MST after the car was unplugged.
-Configuration validation passed and the existing charger entry reloaded.
-The [first charging trial](charging-test-2026-11-07.md) captured a normal
-15.18 kWh charge, but forced requests did not resolve live telemetry gaps.
+## Current profile
 
-The profile now marks the phase-energy sensor's read-only DP6 with `force: true`.
-Tuya Local registers that datapoint once and requests it through its existing
-charger connection using `updatedps`. No extra Tuya client or charging command
-is involved. Current, operating mode and vehicle battery target are unchanged.
+DP6 uses Tuya Local's defaults: retain the last reported value between status
+polls, with no forced refresh. The YAML omits both `persist` (default true) and
+`force` (default false) on every DP6 reference. This is a device-profile change;
+Tuya Local's runtime code is unchanged.
 
-`persist: false` stays in place. A status response that omits DP6 can still clear
-the live readings; the first trial still showed sparse phase
-reports and unavailable periods. It does not make cached readings proof of current power
-or establish that the earlier reporting gaps were network packet loss.
+Voltage, current and charging power keep their existing charging-status guards.
+A stopped or unknown charging state hides an earlier positive phase reading.
+Phase session energy retains its last reported counter through a stop and
+updates when the charger sends a new packet. Before the first DP6 report,
+phase readings remain unavailable. Raw packet history stays enabled in Recorder.
 
-The trial checked:
+No age indicator, extra dashboard card, timer or polling loop is added.
+The charger reports on its own cadence; the last 15 intervals in the measured
+charge were within about 0.03 seconds of 120 seconds. A retained value is the
+last device report, as with Tuya Local's normal sensor behavior. Charging state
+still comes from its separate status datapoint.
 
-- Whether the explicit request produces a valid 12-byte DP6 response.
-- The interval between fresh phase reports and any unavailable periods.
-- Whether local start, charging and the eventual stop remain correctly reported.
-- Whether the next plug-in starts from the zero counter observed at unplug.
+The revised profile is installed in HA and mirrored in the prepared upstream
+profile. Configuration validation and a targeted entry reload passed while the
+charger was disconnected. Current, mode, vehicle target and entity identities
+were preserved. No charging/vehicle command or full HA restart was used.
 
-Keep the existing 40 A setting and 80% vehicle target. Use HA Recorder's existing
-`raw_phase_packet` history for the next cycle. No repeated current/start/stop
-experiments or vehicle wakes are needed to test telemetry freshness.
+## Earlier forced-refresh trial
 
-Before activation, physical unplug at 11:03:02 MST produced DP6
-`AAAAAAAAAAAAAAAA`: all 12 bytes zero, including session energy. DP25 and the
-lifetime meter retained their completed readings. This reset preceded the reload.
+The earlier trial used `force: true` with `persist: false`. The
+[November 7 charge](charging-test-2026-11-07.md) ran normally and delivered
+15.18 kWh, matching DP6, DP25 and the lifetime-meter increase. The collector
+recorded 81 distinct phase packets with no HA read errors. Reports were initially
+roughly ten seconds apart, then settled around two minutes apart.
 
-The private HA-state collector completed this cycle successfully. It was
-configured to wait up to seven
-days, capture up to 12 hours from plug-in and finish three minutes
-after charging stops or the vehicle disconnects. It sampled existing HA states
-every 15 seconds while waiting and every two seconds during the cycle. Resuming
-within the end buffer would continue capture. It used no extra Tuya connection,
-charging command or vehicle query. Existing Recorder history remains enabled.
-The temporary collector runs on the desktop; desktop sleep or shutdown can
-interrupt it. It records state changes, not every identical network frame.
+Under that earlier profile, status polls that omitted DP6 cleared its cached
+value. Phase energy was consequently unavailable about 65% of charging time.
+That was a profile-cache behavior between reports; it does not establish
+network packet loss. Forced requests did not demonstrate a need to override
+normal reporting, so the trial flag has been removed.
 
-Validation: 108 local tests and 33 upstream config tests passed. A transport
-registration test confirms the only explicitly requested datapoint is DP6.
-Both profile YAML files pass lint; translation and duplicate checks are tracked
-with the upstream preparation. A successful static check is not a successful
-physical charging test.
+Before the trial, physical unplug at 11:03:02 MST produced DP6
+`AAAAAAAAAAAAAAAA` (12 zero bytes). DP25 and lifetime energy retained their
+completed readings. The next charge began DP6 at zero and ended at 15.18 kWh.
 
-Result: 81 distinct phase packets, including the stopped packet. Later positive
-power reports were about two minutes apart, and phase energy was unavailable
-for about 65% of the charging window. DP6, DP25 and the lifetime increase all
-matched 15.18 kWh. The collector had no HA read errors and exited after its
-three-minute stop buffer. The live telemetry issue remains open; see the linked
-trial for timestamp coverage and limitations.
+## Validation
+
+114 local tests passed against the pinned Tuya Local transport. The cache
+regression exercises its real full-poll merge: omitted DP6 survives successive
+polls, updated charging status still hides stopped power, and a new phase
+packet replaces the retained value. Registration requests no forced datapoints.
+
+33 upstream device-config tests passed, along with Ruff, translation, duplicate
+and profile YAML checks. No perfect duplicate profile was found. Revised
+retention has not yet been observed during another physical charge; the test
+covers the actual cache mechanism with synthetic packets and the recorded
+report cadence supplies the device evidence. The earlier private capture is
+complete; existing Recorder history continues without recurring check-ins.

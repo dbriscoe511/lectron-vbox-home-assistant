@@ -66,9 +66,6 @@ entities:
         type: base64
         name: sensor
         optional: true
-        # Status polls omit DP6; request it on the existing connection.
-        force: true
-        persist: false
         unit: kWh
         mask: "0000000000000000FFFFFFFF"
         mapping:
@@ -77,12 +74,10 @@ entities:
         type: string
         name: raw_phase_packet
         optional: true
-        persist: false
       - id: 6
         type: string
         name: available
         optional: true
-        persist: false
         mapping:
           - dps_val: null
             value: false
@@ -359,7 +354,6 @@ entities:
         type: base64
         name: sensor
         optional: true
-        persist: false
         unit: kW
         mask: 0000000000FFFFFF00000000
         class: measurement
@@ -369,7 +363,6 @@ entities:
         type: base64
         name: available
         optional: true
-        persist: false
         mapping:
           - dps_val: null
             value: false
@@ -411,7 +404,6 @@ entities:
         type: base64
         name: sensor
         optional: true
-        persist: false
         unit: V
         mask: FFFF00000000000000000000
         class: measurement
@@ -421,7 +413,6 @@ entities:
         type: base64
         name: available
         optional: true
-        persist: false
         mapping:
           - dps_val: null
             value: false
@@ -441,7 +432,6 @@ entities:
         type: base64
         name: sensor
         optional: true
-        persist: false
         unit: A
         mask: 0000FFFFFF00000000000000
         class: measurement
@@ -451,7 +441,6 @@ entities:
         type: base64
         name: available
         optional: true
-        persist: false
         mapping:
           - dps_val: null
             value: false

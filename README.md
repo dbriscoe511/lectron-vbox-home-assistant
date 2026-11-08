@@ -26,6 +26,10 @@ not establish compatibility with every product revision.
 - Weekday17:00–21:00 automatic block (America/Denver), with a manual session override.
 - Optional power readings when the charger actually reports them.
 
+Voltage/current/power reported about every two minutes once charging settled
+in the measured session. The profile uses Tuya Local’s normal retention between
+reports, with charging-status guards for stopped readings.
+
 Controls write **charging request DP18**, **current DP4**, and **mode DP14**.
 Mode changes are available while the charger is stopped. Native app schedules
 can be enabled by selecting Scheduled Charge; editing those schedules stays in

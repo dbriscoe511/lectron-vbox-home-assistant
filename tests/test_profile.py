@@ -51,7 +51,7 @@ def test_energy_scale_and_state_classes(config, state):
     assert entity(config, "Session energy").find_dps("sensor").state_class is None
 
 
-def test_phase_refresh_registers_only_read_only_dp6(config):
+def test_phase_uses_normal_reporting_without_forced_requests(config):
     from custom_components.tuya_local.device import TuyaLocalDevice
 
     # Exercise the transport's registration, without creating a socket or running it.
@@ -65,7 +65,7 @@ def test_phase_refresh_registers_only_read_only_dp6(config):
         child = Mock()
         child._config = definition
         TuyaLocalDevice.register_entity(transport, child)
-    assert transport._force_dps == [6]
+    assert transport._force_dps == []
 
 
 def test_temperature_is_fahrenheit(config, state):
@@ -110,12 +110,12 @@ def test_unrecognized_status_is_unknown_and_not_a_valid_enum_option(config, stat
 
 
 @pytest.mark.parametrize("name,dp", [("Charging power", "6"), ("Single phase power", "5"), ("Voltage", "6"), ("Current", "6")])
-def test_missing_power_is_unavailable_and_does_not_persist(config, state, name, dp):
+def test_missing_power_is_unavailable_until_first_report(config, state, name, dp):
     assert value(config, state, name) is None
     assert value(config, state, name, "available") is False
     ent = entity(config, name)
-    assert ent.find_dps("sensor").persist is False
-    assert ent.find_dps("available").persist is False
+    assert ent.find_dps("sensor").persist is (dp == "6")
+    assert ent.find_dps("available").persist is (dp == "6")
     state['3'] = 'charger_charging'
     packet = (2400).to_bytes(2, "big") + (32000).to_bytes(3, "big") + (7680).to_bytes(3, "big") + bytes(4)
     state[dp] = base64.b64encode(packet).decode() if dp == '6' else 7680
@@ -163,7 +163,7 @@ def test_missing_phase_energy_is_unavailable_not_zero_or_dp25(config, state):
     assert sensor.native_value is None
     assert value(config, state, 'Phase session energy', 'available') is False
     assert 'raw_phase_packet' not in sensor.extra_state_attributes
-    assert all(not dp.persist for dp in entity(config, 'Phase session energy').dps())
+    assert all(dp.persist for dp in entity(config, 'Phase session energy').dps())
 
 
 def test_profile_only_writes_charging_request_and_excludes_sensitive_controls(config):
@@ -238,3 +238,38 @@ def test_noncharging_status_hides_stale_phase_packet(config, state, status):
     state['3']=status
     for name in ('Voltage','Current','Charging power'):
         assert value(config,state,name,'available') is False
+
+
+@pytest.mark.parametrize("status", ["charger_charging", "charger_pause", "charger_end", "charger_free", "charger_fault", None])
+def test_phase_cache_survives_full_polls_and_obeys_charging_status(config, state, status):
+    from custom_components.tuya_local.device import TuyaLocalDevice
+
+    # Use the real transport cache merge; any nonpersistent reference can erase DP6.
+    transport = Mock()
+    transport._cached_state = dict(state)
+    transport._children = []
+    for definition in config.all_entities():
+        child = Mock()
+        child._config = definition
+        transport._children.append(child)
+    packet = base64.b64encode(
+        (2400).to_bytes(2, "big") + (32000).to_bytes(3, "big")
+        + (7680).to_bytes(3, "big") + (159).to_bytes(4, "big")
+    ).decode()
+    transport._api.status.return_value = {"dps": {"3": "charger_charging", "6": packet}}
+    TuyaLocalDevice._refresh_cached_state(transport)
+    assert transport._cached_state["6"] == packet
+
+    transport._api.status.return_value = {"dps": {"3": status}}
+    for _ in range(3):
+        TuyaLocalDevice._refresh_cached_state(transport)
+        assert transport._cached_state["6"] == packet
+        for name in ("Voltage", "Current", "Charging power"):
+            assert value(config, transport._cached_state, name, "available") is (status == "charger_charging")
+        assert value(config, transport._cached_state, "Phase session energy") == 1.59
+
+    stopped_packet = base64.b64encode(bytes(8) + (170).to_bytes(4, "big")).decode()
+    transport._api.status.return_value = {"dps": {"3": "charger_pause", "6": stopped_packet}}
+    TuyaLocalDevice._refresh_cached_state(transport)
+    assert transport._cached_state["6"] == stopped_packet
+    assert value(config, transport._cached_state, "Phase session energy") == 1.70
