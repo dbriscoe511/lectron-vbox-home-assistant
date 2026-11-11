@@ -24,22 +24,20 @@ Request support for Lectron V-BOX Pro NACS Wi-Fi EV charger
 
 ## Log message (required)
 
-**Still to capture. Do not submit without it.** The form says reports without
-the integration's own local log are closed immediately.
+Captured November 11, 2026 from unmodified upstream Tuya Local 2026.10.0 (the
+latest release, without this profile) in a temporary HA 2026.11.0, by adding the
+charger manually and cancelling at the device-type step. The charger was
+plugged in and paused. Paste verbatim except DP22, which is the charger's MAC
+address; say it was redacted.
 
-What to paste: the two Warning lines Tuya Local writes at the device-type step,
-`Device matches <type> with quality of N%. LOCAL DPS: {...}` and the line after
-it, copied verbatim from Settings → System → Logs.
+```text
+2026-11-11 09:55:40.778-07:00 WARNING (MainThread) [custom_components.tuya_local.config_flow] Device matches afyeev_16a_evcharger with quality of 80%. LOCAL DPS: {"updated_at": 1794416139.5188913, "1": 235936, "3": "charger_pause", "4": 40, "10": 0, "13": "controlpi_9v_pwm", "14": "charge_now", "15": 0, "17": 10, "18": true, "22": "<MAC redacted>", "23": "HW V1.2,SW V2.0.1", "24": 68, "25": 2436, "27": "offline", "103": true}
+2026-11-11 09:55:40.778-07:00 WARNING (MainThread) [custom_components.tuya_local.config_flow] Include the previous log messages with any new device request to https://github.com/make-all/tuya-local/issues/
+```
 
-How it will be captured: Tuya Local aborts a second add flow for a device that's
-already configured before it reaches that step, so the live HA can't produce the
-line without removing the charger. The plan is a temporary, separate HA
-instance running unmodified upstream Tuya Local (without this profile), with the
-charger added manually there and the flow cancelled at the type step. The live
-charger entry is disabled during the capture, since the charger may accept only one
-local client, then re-enabled. Do it while the car isn't charging. This needs
-Dan's go-ahead first; it hasn't been done. The log contains no local key; check
-it for the device ID before pasting.
+DP6 (phase report) is absent because the charger only sends it while charging;
+mention that under DPS information. The best existing match, at 80%, is
+`afyeev_16a_evcharger`.
 
 ## Product ID
 
@@ -90,8 +88,8 @@ Draft text (keep it short):
 > stop/restart, Manual Start and plug-in charging. On the latest charge, DP6
 > session energy, DP25 and the lifetime meter all matched at 24.36 kWh. DP6
 > reports arrive about every 120 s; the profile uses default retention, and
-> voltage/current/power go unavailable when charging stops. Closest existing
-> profiles are the Vevor chargers at 81%.
+> voltage/current/power go unavailable when charging stops. The closest
+> existing profile in the log is afyeev_16a_evcharger at 80%.
 >
 > Config written with AI assistance. I understand it and will make requested
 > changes. Test write-ups:
@@ -101,7 +99,7 @@ Draft text (keep it short):
 
 | Evidence | Where it goes | Status |
 | --- | --- | --- |
-| LOCAL DPS warning lines from Tuya Local | Log message | **To capture** (see above) |
+| LOCAL DPS warning lines from Tuya Local | Log message | Ready, captured November 11 (MAC redacted) |
 | Product ID `xoiejlwg1pq0ehpk` | Product ID | Ready |
 | Lectron app SDK schema map, unmodified | DPS information (attached file) | Ready, [public copy](manufacturer-schema.json) |
 | Fork branch with the profile | Information | Ready, pushed |
@@ -118,5 +116,5 @@ device ID, local key, MAC or IP. If the maintainer asks for diagnostics, run
 - Recheck the live form; the priority note or required fields may have changed.
 - Rebase the fork branch if upstream has moved, rerun the checks above and
   update the tag/installer pin together.
-- Paste the real log; never write or reconstruct one.
+- Paste the captured log above as is, apart from the redacted MAC.
 - Opening the issue posts publicly under Dan's account; Dan opens it.
