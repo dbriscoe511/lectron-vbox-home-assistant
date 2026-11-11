@@ -2,6 +2,7 @@
 import base64
 import asyncio
 import json
+import os
 from pathlib import Path
 from unittest.mock import Mock, AsyncMock
 
@@ -14,7 +15,10 @@ from custom_components.tuya_local.switch import TuyaLocalSwitch
 from custom_components.tuya_local.select import TuyaLocalSelect
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "devices" / "lectron_vbox_pro.yaml"
+PROFILE = (
+    Path(os.environ["TUYA_LOCAL_SOURCE"])
+    / "custom_components/tuya_local/devices/lectron_vboxpro_evcharger.yaml"
+)
 
 
 @pytest.fixture
@@ -37,7 +41,13 @@ def device(state):
 
 
 def entity(config, name):
-    return next(item for item in config.all_entities() if item.name == name)
+    # Upstream leaves default names (Status, Voltage, ...) to translations or device class.
+    slug = name.lower().replace(" ", "_")
+    items = list(config.all_entities())
+    return next(
+        (item for item in items if item.name == name),
+        None,
+    ) or next(item for item in items if item.name is None and item.config_id == f"{item.entity}_{slug}")
 
 
 def value(config, state, name, field="sensor"):

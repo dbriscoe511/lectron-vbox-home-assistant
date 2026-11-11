@@ -50,8 +50,7 @@ polls, updated charging status still hides stopped power, and a new phase
 packet replaces the retained value. Registration requests no forced datapoints.
 
 33 upstream device-config tests passed, along with Ruff, translation, duplicate
-and profile YAML checks. No perfect duplicate profile was found. Revised
-retention has not yet been observed during another physical charge; the test
-covers the actual cache mechanism with synthetic packets and the recorded
-report cadence supplies the device evidence. The earlier private capture is
+and profile YAML checks. No perfect duplicate profile was found. The
+[November 10 charge](charging-test-2026-11-10.md) confirmed the revised
+retention on a real charge. The earlier private capture is
 complete; existing Recorder history continues without recurring check-ins.

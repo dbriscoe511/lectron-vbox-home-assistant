@@ -27,7 +27,7 @@ No protection setting changed. Continuous cloud-blocked operation, Wi-Fi outages
 and power failures remain untested. Configured availability is based on actual
 local connection health.
 
-The public schema contains only selected manufacturer datapoint definitions.
+The public schema is the Lectron app SDK's datapoint definitions (schema map) only.
 Private keys, app files, account cache, device IDs/MACs, real energy histories,
 network addresses and HA configuration are not part of this repository.
 
