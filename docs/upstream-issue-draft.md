@@ -1,6 +1,8 @@
 # Upstream new-device issue draft
 
-Not submitted. This is a draft for Tuya Local's
+Not submitted. As of November 11, 2026 upstream limits new issues and PRs to
+collaborators and has Discussions disabled, so this waits until intake reopens.
+This is a draft for Tuya Local's
 [New Device form](https://github.com/make-all/tuya-local/issues/new?template=new-device.yaml),
 laid out field by field. New-device PRs are paused upstream, and the form says
 only two kinds of request are being worked on:
